@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from "react";
-import { Stage, Layer, Rect, Text, Circle, Line, Image as KImage, Transformer } from "react-konva";
+import { Stage, Layer, Rect, Text, Circle, Line, Path, Image as KImage, Transformer, TextPath } from "react-konva";
 import useImage from "use-image";
 import Konva from "konva";
 import { AnyEl, SNAP_GRID } from "./types";
@@ -38,9 +38,46 @@ function buildGradientProps(el: AnyEl) {
   };
 }
 
-function ImgNode({ el, ...rest }: any) {
-  const [img] = useImage(el.src, "anonymous");
-  return <KImage image={img} {...rest} />;
+function FilterNode({ el, children, common }: { el: AnyEl; children: (nodeProps: any) => React.ReactNode; common: any }) {
+  const nodeRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (nodeRef.current && el.filters) {
+      const node = nodeRef.current;
+      const filters = [];
+      if (el.filters.blur) filters.push(Konva.Filters.Blur);
+      if (el.filters.brightness !== undefined) filters.push(Konva.Filters.Brighten);
+      if (el.filters.contrast !== undefined) filters.push(Konva.Filters.Contrast);
+      if (el.filters.invert) filters.push(Konva.Filters.Invert);
+
+      node.filters(filters);
+      if (el.filters.blur) node.blurRadius(el.filters.blur);
+      if (el.filters.brightness !== undefined) node.brightness(el.filters.brightness);
+      if (el.filters.contrast !== undefined) node.contrast(el.filters.contrast);
+
+      node.cache();
+    } else if (nodeRef.current) {
+      nodeRef.current.clearCache();
+      nodeRef.current.filters([]);
+    }
+  }, [el.filters]);
+
+  const nodeProps = {
+    ...common,
+    ref: nodeRef,
+    globalCompositeOperation: el.blendMode || "source-over",
+  };
+
+  return children(nodeProps);
+}
+
+function ImgNode({ el, common }: { el: AnyEl; common: any }) {
+  const [img] = useImage((el as any).src, "anonymous");
+  return (
+    <FilterNode el={el} common={common}>
+      {(nodeProps) => <KImage image={img} {...nodeProps} />}
+    </FilterNode>
+  );
 }
 
 function NodeFor({ el, common }: { el: AnyEl; common: any }) {
@@ -49,27 +86,68 @@ function NodeFor({ el, common }: { el: AnyEl; common: any }) {
     case "text": {
       const t = el as any;
       return (
-        <Text {...common} text={t.text ?? ""} fontSize={t.fontSize ?? 16} fontFamily={t.fontFamily ?? "Inter"}
-          fontStyle={t.fontStyle ?? "normal"} align={t.align ?? "left"}
-          letterSpacing={t.letterSpacing ?? 0} lineHeight={t.lineHeight ?? 1.2}
-          fill={el.fill ?? "#111111"} width={el.width} wrap="word" />
+        <FilterNode el={el} common={common}>
+          {(nodeProps) => (
+            <Text {...nodeProps} text={t.text ?? ""} fontSize={t.fontSize ?? 16} fontFamily={t.fontFamily ?? "Inter"}
+              fontStyle={t.fontStyle ?? "normal"} align={t.align ?? "left"}
+              letterSpacing={t.letterSpacing ?? 0} lineHeight={t.lineHeight ?? 1.2}
+              fill={el.fill ?? "#111111"} width={el.width} wrap="word" />
+          )}
+        </FilterNode>
+      );
+    }
+    case "textpath": {
+      const t = el as any;
+      return (
+        <FilterNode el={el} common={common}>
+          {(nodeProps) => (
+            <TextPath {...nodeProps} text={t.text ?? ""} data={t.data} fontSize={t.fontSize ?? 16} fontFamily={t.fontFamily ?? "Inter"}
+              fill={el.fill ?? "#111111"} letterSpacing={t.letterSpacing ?? 0} />
+          )}
+        </FilterNode>
       );
     }
     case "rect":
-      return <Rect {...common} {...gp} cornerRadius={(el as any).cornerRadius ?? 0}
-        fill={el.gradient ? undefined : (el.fill ?? "#7c3aed")} stroke={el.stroke} strokeWidth={el.strokeWidth ?? 0} />;
+      return (
+        <FilterNode el={el} common={common}>
+          {(nodeProps) => (
+            <Rect {...nodeProps} {...gp} cornerRadius={(el as any).cornerRadius ?? 0}
+              fill={el.gradient ? undefined : (el.fill ?? "#7c3aed")} stroke={el.stroke} strokeWidth={el.strokeWidth ?? 0} />
+          )}
+        </FilterNode>
+      );
     case "circle": {
       const cx = el.x + el.width / 2; const cy = el.y + el.height / 2;
-      return <Circle {...common} {...gp} x={cx} y={cy} radius={Math.min(el.width, el.height) / 2}
-        fill={el.gradient ? undefined : (el.fill ?? "#06b6d4")} stroke={el.stroke} strokeWidth={el.strokeWidth ?? 0} />;
+      return (
+        <FilterNode el={el} common={common}>
+          {(nodeProps) => (
+            <Circle {...nodeProps} {...gp} x={cx} y={cy} radius={Math.min(el.width, el.height) / 2}
+              fill={el.gradient ? undefined : (el.fill ?? "#06b6d4")} stroke={el.stroke} strokeWidth={el.strokeWidth ?? 0} />
+          )}
+        </FilterNode>
+      );
     }
     case "line": {
       const isVert = (el.height ?? 0) > (el.width ?? 0);
-      return <Line {...common} points={isVert ? [0,0,0,el.height] : [0,0,el.width,0]}
-        stroke={el.stroke ?? "#111111"} strokeWidth={el.strokeWidth ?? 2} />;
+      return (
+        <FilterNode el={el} common={common}>
+          {(nodeProps) => (
+            <Line {...nodeProps} points={isVert ? [0,0,0,el.height] : [0,0,el.width,0]}
+              stroke={el.stroke ?? "#111111"} strokeWidth={el.strokeWidth ?? 2} />
+          )}
+        </FilterNode>
+      );
     }
-    case "image": case "barcode": case "nutrition":
-      return <ImgNode el={el} {...common} />;
+    case "image": case "barcode": case "nutrition": case "qrcode":
+      return <ImgNode el={el} common={common} />;
+    case "path":
+      return (
+        <FilterNode el={el} common={common}>
+          {(nodeProps) => (
+            <Path {...nodeProps} data={(el as any).data} fill={el.fill ?? "#111111"} stroke={el.stroke} strokeWidth={el.strokeWidth ?? 0} />
+          )}
+        </FilterNode>
+      );
     default: return null;
   }
 }
@@ -100,7 +178,9 @@ export default function CanvasStage({
   selectedId: string | null;
   selectedIds?: string[];
   onSelect: (id: string | null) => void;
-  onToggleSelect?: (id: string) => void;
+  onStageClick?: (e: any) => void;
+  currentPathPoints?: {x: number, y: number}[];
+  onToggleSelect: (id: string) => void;
   onClearSelection?: () => void;
   onDblClick?: (id: string) => void;
   onChange: (id: string, patch: Partial<AnyEl>) => void;
@@ -250,22 +330,57 @@ export default function CanvasStage({
         scaleX={scale} scaleY={scale}
         x={stagePos.x} y={stagePos.y}
         onWheel={handleWheel}
-        onMouseDown={e => { if (e.target === e.target.getStage() && !e.evt.shiftKey) { onClearSelection?.() ?? onSelect(null); } }}
+        onMouseDown={e => { 
+          if (e.target === e.target.getStage()) {
+            onStageClick?.(e);
+          }
+        }}
         style={{ display: "block" }}
       >
         <Layer ref={layerRef}>
+          {/* Fundo do Rótulo */}
           <Rect x={0} y={0} width={width} height={height} fill="#ffffff" listening={false} />
 
-          {showZoneGuides && [
-            <Line key="z1" points={[width*0.28, 0, width*0.28, height]} stroke="#7c3aed" strokeWidth={0.5} dash={[4,4]} opacity={0.5} listening={false} />,
-            <Line key="z2" points={[width*0.70, 0, width*0.70, height]} stroke="#7c3aed" strokeWidth={0.5} dash={[4,4]} opacity={0.5} listening={false} />,
-          ]}
+          {/* Guias de Impressão */}
+          {showZoneGuides && (
+            <>
+              {/* Sangria (Bleed) - 3mm externa (visualizada internamente aqui por simplicidade) */}
+              <Rect x={0} y={0} width={width} height={height} stroke="#ff0000" strokeWidth={1} dash={[5, 5]} opacity={0.6} listening={false} />
+              
+              {/* Margem de Segurança - 3mm interna */}
+              <Rect x={PX_PER_CM * 0.3} y={PX_PER_CM * 0.3} width={width - PX_PER_CM * 0.6} height={height - PX_PER_CM * 0.6} stroke="#22c55e" strokeWidth={1} dash={[3, 3]} opacity={0.4} listening={false} />
+
+              {/* Zonas do Rótulo (Esquerda, Centro, Direita) */}
+              <Line points={[width * 0.28, 0, width * 0.28, height]} stroke="#7c3aed" strokeWidth={0.5} dash={[10, 5]} opacity={0.3} listening={false} />
+              <Line points={[width * 0.72, 0, width * 0.72, height]} stroke="#7c3aed" strokeWidth={0.5} dash={[10, 5]} opacity={0.3} listening={false} />
+              
+              {/* Rótulos das Zonas */}
+              <Text x={width * 0.05} y={height - 20} text="ZONA LEGAL" fontSize={10} fill="#7c3aed" opacity={0.5} />
+              <Text x={width * 0.45} y={height - 20} text="FRENTE" fontSize={10} fill="#7c3aed" opacity={0.5} />
+              <Text x={width * 0.85} y={height - 20} text="MARKETING" fontSize={10} fill="#7c3aed" opacity={0.5} />
+            </>
+          )}
 
           {elements.map(el => (
             <NodeFor key={el.id} el={el} common={makeCommon(el)} />
           ))}
 
-          <Transformer
+          {/* ── DRAWING PREVIEW ── */}
+        {currentPathPoints && currentPathPoints.length > 0 && (
+          <Group>
+            <Line
+              points={currentPathPoints.flatMap(p => [p.x, p.y])}
+              stroke="#7c3aed"
+              strokeWidth={2}
+              dash={[5, 5]}
+            />
+            {currentPathPoints.map((p, i) => (
+              <Circle key={i} x={p.x} y={p.y} radius={4} fill="#7c3aed" stroke="white" strokeWidth={1} />
+            ))}
+          </Group>
+        )}
+
+        <Transformer
             ref={trRef}
             rotateEnabled keepRatio={false}
             anchorSize={8} anchorCornerRadius={2}

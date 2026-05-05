@@ -11,11 +11,14 @@ import { useEditorState } from "@/editor/useEditorState";
 import { useFonts, ALL_GOOGLE_FONTS } from "@/editor/useFonts";
 import { AnyEl, PX_PER_CM, TextEl } from "@/editor/types";
 import { exportToPDF, exportToPNG, exportToJPG, generateThumbnail } from "@/editor/ExportEngine";
+import Mockup3D from "@/editor/Mockup3D";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  Undo2, Redo2, ZoomIn, ZoomOut, Save, Download,
-  ChevronLeft, Layers, Grid3x3, Maximize2, Clock, Settings2
+  Undo2, Redo2, ZoomIn, ZoomOut, Save, Download, 
+  Trash2, Copy, Eye, EyeOff, Layers, AlignCenterHorizontal, 
+  AlignCenterVertical, Maximize2, Move, MousePointer2, PenTool 
 } from "lucide-react";
 import { toast } from "sonner";
 import Konva from "konva";
@@ -23,6 +26,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export default function Editor() {
@@ -46,6 +50,10 @@ export default function Editor() {
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [editingText, setEditingText] = useState<(TextEl & { id: string }) | null>(null);
+  const [show3D, setShow3D] = useState(false);
+  const [mockupImage, setMockupImage] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<"select" | "pen">("select");
+  const [currentPathPoints, setCurrentPathPoints] = useState<{x: number, y: number}[]>([]);
 
   // Pre-load all Google Fonts on mount
   useFonts(ALL_GOOGLE_FONTS);
@@ -305,6 +313,40 @@ export default function Editor() {
           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setZoom(z => Math.min(3, +(z + 0.1).toFixed(1)))}>
             <ZoomIn className="w-3.5 h-3.5"/>
           </Button>
+          <div className="w-px h-3 mx-1 bg-border/40" />
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-7 px-2 text-[10px] gap-1 font-bold text-primary hover:text-primary hover:bg-primary/10"
+            onClick={() => {
+              if (stageRef.current) {
+                const currentZones = showZones;
+                setShowZones(false);
+                setTimeout(() => {
+                  const dataUrl = stageRef.current?.toDataURL({ pixelRatio: 2 });
+                  setMockupImage(dataUrl || null);
+                  setShow3D(true);
+                  setShowZones(currentZones);
+                }, 50);
+              }
+            }}
+          >
+            <span className="text-xs">🧊</span> 3D
+          </Button>
+        </div>
+
+        {/* Tool Selector */}
+        <div className="flex items-center bg-background/80 backdrop-blur-xl border border-white/10 rounded-full px-1.5 py-1 shadow-xl">
+          <Button size="icon" variant={activeTool === "select" ? "default" : "ghost"} className="h-7 w-7 rounded-full" 
+            title="Selecionar (V)"
+            onClick={() => { setActiveTool("select"); setCurrentPathPoints([]); }}>
+            <MousePointer2 className="w-3.5 h-3.5"/>
+          </Button>
+          <Button size="icon" variant={activeTool === "pen" ? "default" : "ghost"} className="h-7 w-7 rounded-full" 
+            title="Caneta (P)"
+            onClick={() => { setActiveTool("pen"); setSelectedId(null); }}>
+            <PenTool className="w-3.5 h-3.5"/>
+          </Button>
         </div>
 
         {/* View toggles */}
@@ -420,8 +462,21 @@ export default function Editor() {
                   setScale={setZoom}
                   elements={ed.elements.filter(e => !hiddenIds.has(e.id))}
                   selectedId={ed.selectedId}
+                  showZones={showZones}
+                  showBleed={showBleed}
+                  onSelect={id => {
+                    if (activeTool === "select") setSelectedId(id);
+                  }}
+                  onStageClick={(e) => {
+                    if (activeTool === "pen") {
+                      const pos = e.target.getStage()?.getRelativePointerPosition();
+                      if (pos) setCurrentPathPoints(p => [...p, pos]);
+                    } else {
+                      setSelectedId(null);
+                    }
+                  }}
+                  currentPathPoints={activeTool === "pen" ? currentPathPoints : []}
                   selectedIds={ed.selectedIds}
-                  onSelect={ed.setSelectedId}
                   onToggleSelect={ed.toggleSelect}
                   onClearSelection={ed.clearSelection}
                   onChange={ed.update}
@@ -477,6 +532,21 @@ export default function Editor() {
           onReorder={d => ed.selectedId && ed.reorder(ed.selectedId, d)}
         />
       </div>
+      {/* ── 3D PREVIEW DIALOG ── */}
+      <Dialog open={show3D} onOpenChange={setShow3D}>
+        <DialogContent className="max-w-4xl p-0 bg-slate-900 border-white/10 overflow-hidden">
+          <DialogHeader className="p-4 absolute top-0 left-0 right-0 z-20 pointer-events-none">
+            <DialogTitle className="text-white opacity-0">Preview 3D</DialogTitle>
+          </DialogHeader>
+          {mockupImage && (
+            <Mockup3D 
+              labelImage={mockupImage} 
+              widthCm={project.width_cm} 
+              heightCm={project.height_cm} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

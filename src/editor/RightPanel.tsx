@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Copy, Trash2, AlignLeft, AlignCenter, AlignRight,
-  Bold, Italic, Palette, Move, Layers2, AlignCenterVertical, AlignCenterHorizontal
+  Bold, Italic, Palette, Move, Layers2, AlignCenterVertical, AlignCenterHorizontal,
+  Sparkles, Filter, Copy, Trash2, AlignLeft, AlignCenter, AlignRight, Settings, Database
 } from "lucide-react";
 import { AnyEl } from "./types";
 import GradientPanel from "./GradientPanel";
 import { ALL_GOOGLE_FONTS, useLoadFont } from "./useFonts";
 import { cn } from "@/lib/utils";
+import { generateBarcodeDataURL, generateQRCodeDataURL, generateNutritionTableSVG } from "./generators";
+import { Plus, ChevronsUp, ChevronUp, ChevronDown, ChevronsDown } from "lucide-react";
 
 // ─── Quick color swatches ─────────────────────────────────────────────────────
 const QUICK_COLORS = [
@@ -101,7 +102,7 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
   canvasW: number;
   canvasH: number;
 }) {
-  const [tab, setTab] = useState<"style" | "gradient" | "position">("style");
+  const [tab, setTab] = useState<"style" | "gradient" | "position" | "data" | "effects">("style");
   const loadFont = useLoadFont();
 
   // Load font when element is selected
@@ -129,13 +130,15 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
   const isShape  = el.type === "rect" || el.type === "circle";
   const isLine   = el.type === "line";
   const canGrad  = isShape; // only shapes support gradient
+  const hasData  = ["nutrition", "barcode", "qrcode"].includes(el.type);
 
   const TYPE_COLOR: Record<string, string> = {
     text: "bg-blue-500", rect: "bg-violet-500", circle: "bg-pink-500",
     line: "bg-emerald-500", image: "bg-orange-500", barcode: "bg-gray-500", nutrition: "bg-teal-500",
+    qrcode: "bg-black",
   };
   const TYPE_ICON: Record<string, string> = {
-    text: "T", rect: "▭", circle: "◯", line: "—", image: "⊞", barcode: "▦", nutrition: "≡",
+    text: "T", rect: "▭", circle: "◯", line: "—", image: "⊞", barcode: "▦", nutrition: "≡", qrcode: "▣",
   };
 
   return (
@@ -163,17 +166,21 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={v => setTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className={cn("mx-3 mt-2 h-7 bg-muted/40 gap-0.5 shrink-0", canGrad ? "grid-cols-3" : "grid-cols-2")}>
-          <TabsTrigger value="style" className="flex-1 h-6 text-[10px] gap-1">
+        <TabsList className={cn("mx-3 mt-2 h-7 bg-muted/40 gap-0.5 shrink-0 grid", 
+          canGrad && hasData ? "grid-cols-5" : (canGrad || hasData ? "grid-cols-4" : "grid-cols-3"))}>
+          <TabsTrigger value="style" className="flex-1 h-6 text-[10px] gap-1 px-1">
             <Palette className="w-3 h-3" />Estilo
           </TabsTrigger>
           {canGrad && (
-            <TabsTrigger value="gradient" className="flex-1 h-6 text-[10px] gap-1">
-              <Layers2 className="w-3 h-3" />Gradiente
+            <TabsTrigger value="gradient" className="flex-1 h-6 text-[10px] gap-1 px-1">
+              <Layers2 className="w-3 h-3" />Grad.
             </TabsTrigger>
           )}
-          <TabsTrigger value="position" className="flex-1 h-6 text-[10px] gap-1">
-            <Move className="w-3 h-3" />Posição
+          <TabsTrigger value="effects" className="flex-1 h-6 text-[10px] gap-1 px-1">
+            <Sparkles className="w-3 h-3" />Efeitos
+          </TabsTrigger>
+          <TabsTrigger value="position" className="flex-1 h-6 text-[10px] gap-1 px-1">
+            <Move className="w-3 h-3" />Pos.
           </TabsTrigger>
         </TabsList>
 
@@ -352,6 +359,53 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
             </Sec>
           </TabsContent>
 
+          {/* ── EFFECTS TAB ── */}
+          <TabsContent value="effects" className="m-0 pt-2 space-y-0">
+            <Sec title="Filtros Visual">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label className="text-[9px] uppercase text-muted-foreground">Desfoque (Blur) — {el.filters?.blur ?? 0}px</Label>
+                  <Slider min={0} max={20} step={1} value={[el.filters?.blur ?? 0]}
+                    onValueChange={([v]) => onChange({ filters: { ...el.filters, blur: v } })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[9px] uppercase text-muted-foreground">Brilho — {((el.filters?.brightness ?? 0) * 100).toFixed(0)}%</Label>
+                  <Slider min={-1} max={1} step={0.05} value={[el.filters?.brightness ?? 0]}
+                    onValueChange={([v]) => onChange({ filters: { ...el.filters, brightness: v } })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[9px] uppercase text-muted-foreground">Contraste — {((el.filters?.contrast ?? 0)).toFixed(1)}</Label>
+                  <Slider min={-100} max={100} step={1} value={[el.filters?.contrast ?? 0]}
+                    onValueChange={([v]) => onChange({ filters: { ...el.filters, contrast: v } })} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-[9px] uppercase text-muted-foreground">Inverter Cores</Label>
+                  <Button variant={el.filters?.invert ? "default" : "outline"} size="sm" className="h-7 text-[10px]"
+                    onClick={() => onChange({ filters: { ...el.filters, invert: !el.filters?.invert } })}>
+                    {el.filters?.invert ? "Ativado" : "Desativado"}
+                  </Button>
+                </div>
+              </div>
+            </Sec>
+
+            <Sec title="Modos de Mesclagem">
+              <div className="space-y-1.5">
+                <Label className="text-[9px] uppercase text-muted-foreground">Blend Mode</Label>
+                <Select value={el.blendMode ?? "source-over"} onValueChange={v => onChange({ blendMode: v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="source-over">Normal</SelectItem>
+                    <SelectItem value="multiply">Multiplicar</SelectItem>
+                    <SelectItem value="screen">Tela (Screen)</SelectItem>
+                    <SelectItem value="overlay">Sobrepor</SelectItem>
+                    <SelectItem value="darken">Escurecer</SelectItem>
+                    <SelectItem value="lighten">Clarear</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </Sec>
+          </TabsContent>
+
           {/* ── GRADIENT TAB ── */}
           {canGrad && (
             <TabsContent value="gradient" className="m-0 pt-3">
@@ -426,6 +480,103 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
               </div>
             </Sec>
           </TabsContent>
+
+          {/* ── DATA TAB ── */}
+          {hasData && (
+            <TabsContent value="data" className="m-0 pt-2 space-y-4 px-3 overflow-y-auto max-h-[calc(100vh-140px)]">
+              {el.type === "nutrition" && (
+                <div className="space-y-4 pb-10">
+                  <Sec title="Dados Gerais">
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">Porções por embalagem</Label>
+                        <Input value={el.data?.servingsPerPackage} 
+                          onChange={e => {
+                            const newData = { ...el.data, servingsPerPackage: e.target.value };
+                            const { src } = generateNutritionTableSVG(newData);
+                            onChange({ data: newData, src });
+                          }} className="h-8 text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">Tamanho da Porção</Label>
+                        <Input value={el.data?.servingSize} 
+                          onChange={e => {
+                            const newData = { ...el.data, servingSize: e.target.value };
+                            const { src } = generateNutritionTableSVG(newData);
+                            onChange({ data: newData, src });
+                          }} className="h-8 text-xs" />
+                      </div>
+                    </div>
+                  </Sec>
+
+                  <Sec title="Nutrientes">
+                    <div className="space-y-2">
+                      {el.data?.nutrients.map((n: any, idx: number) => (
+                        <div key={idx} className="flex gap-1 items-end border-b border-border/40 pb-2 mb-2">
+                          <div className="flex-1 space-y-1">
+                            <Input value={n.name} placeholder="Nome (ex: Proteína)"
+                              onChange={e => {
+                                const nutrients = [...el.data.nutrients];
+                                nutrients[idx] = { ...n, name: e.target.value };
+                                const newData = { ...el.data, nutrients };
+                                const { src } = generateNutritionTableSVG(newData);
+                                onChange({ data: newData, src });
+                              }} className="h-7 text-[10px] px-1.5" />
+                            <Input value={n.perServing} placeholder="Qtd (ex: 20g)"
+                              onChange={e => {
+                                const nutrients = [...el.data.nutrients];
+                                nutrients[idx] = { ...n, perServing: e.target.value };
+                                const newData = { ...el.data, nutrients };
+                                const { src } = generateNutritionTableSVG(newData);
+                                onChange({ data: newData, src });
+                              }} className="h-7 text-[10px] px-1.5" />
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              const nutrients = el.data.nutrients.filter((_: any, i: number) => i !== idx);
+                              const newData = { ...el.data, nutrients };
+                              const { src } = generateNutritionTableSVG(newData);
+                              onChange({ data: newData, src });
+                            }}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button variant="outline" size="sm" className="w-full h-7 text-[10px] gap-1 mt-2 border-dashed"
+                        onClick={() => {
+                          const nutrients = [...(el.data?.nutrients ?? []), { name: "Novo", perServing: "0g", vd: "0%" }];
+                          const newData = { ...el.data, nutrients };
+                          const { src } = generateNutritionTableSVG(newData);
+                          onChange({ data: newData, src });
+                        }}>
+                        <Plus className="w-3 h-3" /> Adicionar Nutriente
+                      </Button>
+                    </div>
+                  </Sec>
+                </div>
+              )}
+
+              {(el.type === "barcode" || el.type === "qrcode") && (
+                <Sec title="Configuração do Código">
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase text-muted-foreground">Valor / Texto / URL</Label>
+                      <Input value={el.code} 
+                        onChange={e => {
+                          const code = e.target.value;
+                          const src = el.type === "barcode" ? generateBarcodeDataURL(code) : generateQRCodeDataURL(code);
+                          onChange({ code, src });
+                        }} className="h-8 text-xs" />
+                    </div>
+                    <div className="text-[9px] text-muted-foreground bg-primary/5 p-2 rounded-lg border border-primary/10">
+                      <p className="font-bold text-primary mb-1">Dica Profissional:</p>
+                      O código é gerado em alta resolução (300dpi) automaticamente ao ser exportado.
+                    </div>
+                  </div>
+                </Sec>
+              )}
+            </TabsContent>
+          )}
 
         </div>
       </Tabs>

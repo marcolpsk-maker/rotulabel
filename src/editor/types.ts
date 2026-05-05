@@ -13,6 +13,13 @@ export interface BaseEl {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  blendMode?: string;
+  filters?: {
+    blur?: number;
+    brightness?: number;
+    contrast?: number;
+    invert?: boolean;
+  };
   // Gradient fill — multi-stop Konva-compatible
   gradient?: {
     type: "linear" | "radial";
@@ -45,6 +52,16 @@ export interface TextEl extends BaseEl {
   upperCase?: boolean;
 }
 
+export interface TextPathEl extends BaseEl {
+  type: "textpath";
+  text: string;
+  data: string; // SVG path data
+  fontSize: number;
+  fontFamily: string;
+  fill: string;
+  letterSpacing?: number;
+}
+
 export interface RectEl extends BaseEl {
   type: "rect";
 }
@@ -68,6 +85,12 @@ export interface BarcodeEl extends BaseEl {
   src: string;
 }
 
+export interface QRCodeEl extends BaseEl {
+  type: "qrcode";
+  code: string;
+  src: string;
+}
+
 export interface NutritionEl extends BaseEl {
   type: "nutrition";
   data: NutritionData;
@@ -87,7 +110,12 @@ export interface NutritionData {
   per100g?: string;
 }
 
-export type AnyEl = TextEl | RectEl | CircleEl | LineEl | ImageEl | BarcodeEl | NutritionEl;
+export interface PathEl extends BaseEl {
+  type: "path";
+  data: string; // SVG path data (d attribute)
+}
+
+export type AnyEl = TextEl | RectEl | CircleEl | LineEl | ImageEl | BarcodeEl | NutritionEl | QRCodeEl | TextPathEl | PathEl;
 
 // Print constants
 export const PX_PER_CM = 37.795; // ~96 dpi screen
