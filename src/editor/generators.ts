@@ -143,10 +143,6 @@ export function generateNutritionTableSVG(
   return { src: encoded, width: w, height: h };
 }
 
-  const encoded = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
-  return { src: encoded, width: w, height: h };
-}
-
 // ─── Pre-built text block generators for label zones ────────────────────────
 
 export function generateWarningsBlock(
