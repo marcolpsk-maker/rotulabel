@@ -15,11 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Undo2, Redo2, ZoomIn, ZoomOut, Save, Download,
-  ChevronLeft, Layers, Grid3x3, Maximize2, Clock
+  ChevronLeft, Layers, Grid3x3, Maximize2, Clock, Settings2
 } from "lucide-react";
 import { toast } from "sonner";
 import Konva from "konva";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export default function Editor() {
@@ -31,6 +34,13 @@ export default function Editor() {
   const [zoom, setZoom] = useState(1);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [, setTick] = useState(0);
+
+  // Tick for "Salvo há X" indicator
+  useEffect(() => {
+    const itv = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(itv);
+  }, []);
   const [showZones, setShowZones] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [snapEnabled, setSnapEnabled] = useState(true);
@@ -229,9 +239,44 @@ export default function Editor() {
           onBlur={async () => { await supabase.from("label_projects").update({ name: project.name }).eq("id", project.id); }}
           className="w-44 h-8 text-sm font-semibold border-none focus-visible:ring-1 bg-transparent"
         />
-        <span className="text-[10px] text-muted-foreground font-mono">
-          {project.width_cm} × {project.height_cm} cm
-        </span>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" className="h-8 gap-2 px-2 hover:bg-muted/60">
+              <span className="text-[10px] text-muted-foreground font-mono">
+                {project.width_cm} × {project.height_cm} cm
+              </span>
+              <Settings2 className="w-3 h-3 text-muted-foreground/50"/>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-4">
+            <h4 className="font-semibold text-sm mb-3">Configurações do Rótulo</h4>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nome do Projeto</Label>
+                <Input value={project.name} onChange={e => setProject({ ...project, name: e.target.value })}
+                  onBlur={async () => { await supabase.from("label_projects").update({ name: project.name }).eq("id", project.id); }} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Largura (cm)</Label>
+                  <Input type="number" value={project.width_cm}
+                    onChange={e => setProject({ ...project, width_cm: parseFloat(e.target.value) || 0 })}
+                    onBlur={async () => { await supabase.from("label_projects").update({ width_cm: project.width_cm }).eq("id", project.id); }} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Altura (cm)</Label>
+                  <Input type="number" value={project.height_cm}
+                    onChange={e => setProject({ ...project, height_cm: parseFloat(e.target.value) || 0 })}
+                    onBlur={async () => { await supabase.from("label_projects").update({ height_cm: project.height_cm }).eq("id", project.id); }} />
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground bg-muted/40 p-2 rounded">
+                Dica: O canvas se ajustará automaticamente. A exportação PDF usará estas medidas reais.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         <div className="flex-1"/>
 
@@ -297,7 +342,7 @@ export default function Editor() {
           {savedAt && !saving && (
             <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1" title={`Salvo às ${savedAt.toLocaleTimeString()}`}>
               <Clock className="w-3 h-3"/>
-              {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {formatDistanceToNow(savedAt, { addSuffix: true, locale: ptBR })}
             </span>
           )}
           <Button size="sm" variant="outline" onClick={save} disabled={saving} className="h-8 gap-1.5">
@@ -424,6 +469,8 @@ export default function Editor() {
         {/* Right panel */}
         <RightPanel
           el={selected}
+          canvasW={widthPx}
+          canvasH={heightPx}
           onChange={p => ed.selectedId && ed.update(ed.selectedId, p)}
           onRemove={() => ed.selectedId && ed.remove(ed.selectedId)}
           onDuplicate={() => ed.selectedId && ed.duplicate(ed.selectedId)}

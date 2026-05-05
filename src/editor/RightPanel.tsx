@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
   Copy, Trash2, AlignLeft, AlignCenter, AlignRight,
-  Bold, Italic, Palette, Move, Layers2
+  Bold, Italic, Palette, Move, Layers2, AlignCenterVertical, AlignCenterHorizontal
 } from "lucide-react";
-import { AnyEl, ALL_FONTS } from "./types";
+import { AnyEl } from "./types";
 import GradientPanel from "./GradientPanel";
+import { ALL_GOOGLE_FONTS, useLoadFont } from "./useFonts";
 import { cn } from "@/lib/utils";
 
 // ─── Quick color swatches ─────────────────────────────────────────────────────
@@ -23,22 +24,59 @@ const QUICK_COLORS = [
 ];
 
 function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const [history, setHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("rotulabel_color_history");
+    if (stored) setHistory(JSON.parse(stored));
+  }, []);
+
+  const addToHistory = (color: string) => {
+    if (color === value) return;
+    const newHistory = [color, ...history.filter(c => c !== color)].slice(0, 10);
+    setHistory(newHistory);
+    localStorage.setItem("rotulabel_color_history", JSON.stringify(newHistory));
+    onChange(color);
+  };
+
   return (
     <div className="space-y-2">
       <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">{label}</Label>
       <div className="flex items-center gap-2">
-        <input type="color" value={value || "#000000"} onChange={e => onChange(e.target.value)}
+        <input type="color" value={value || "#000000"} 
+          onChange={e => onChange(e.target.value)}
+          onBlur={e => addToHistory(e.target.value)}
           className="w-9 h-9 rounded-lg border-2 border-border cursor-pointer shrink-0 p-0.5 bg-transparent" />
-        <Input value={value || "#000000"} onChange={e => onChange(e.target.value)}
+        <Input value={value || "#000000"} 
+          onChange={e => onChange(e.target.value)}
+          onBlur={e => addToHistory(e.target.value)}
           className="h-8 font-mono text-xs flex-1" placeholder="#000000" />
       </div>
-      <div className="grid grid-cols-5 gap-1">
-        {QUICK_COLORS.map(c => (
-          <button key={c} onClick={() => onChange(c)}
-            className={cn("w-full aspect-square rounded-md border-2 transition-all hover:scale-110 hover:z-10",
-              value === c ? "border-primary ring-2 ring-primary/30 scale-110" : "border-transparent")}
-            style={{ background: c }} title={c} />
-        ))}
+
+      {history.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-[8px] text-muted-foreground uppercase font-semibold">Recentes</p>
+          <div className="flex flex-wrap gap-1">
+            {history.map(c => (
+              <button key={c} onClick={() => onChange(c)}
+                className={cn("w-5 h-5 rounded border border-border/40 transition-transform hover:scale-110",
+                  value === c && "ring-1 ring-primary")}
+                style={{ background: c }} title={c} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-1">
+        <p className="text-[8px] text-muted-foreground uppercase font-semibold">Padrão</p>
+        <div className="grid grid-cols-5 gap-1">
+          {QUICK_COLORS.map(c => (
+            <button key={c} onClick={() => addToHistory(c)}
+              className={cn("w-full aspect-square rounded-md border-2 transition-all hover:scale-110 hover:z-10",
+                value === c ? "border-primary ring-2 ring-primary/30 scale-110" : "border-transparent")}
+              style={{ background: c }} title={c} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -54,14 +92,24 @@ function Sec({ title, children }: { title: string; children: React.ReactNode }) 
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReorder }: {
+export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReorder, canvasW, canvasH }: {
   el: AnyEl | null;
   onChange: (patch: Partial<AnyEl>) => void;
   onRemove: () => void;
   onDuplicate: () => void;
   onReorder: (dir: "front" | "back" | "forward" | "backward") => void;
+  canvasW: number;
+  canvasH: number;
 }) {
   const [tab, setTab] = useState<"style" | "gradient" | "position">("style");
+  const loadFont = useLoadFont();
+
+  // Load font when element is selected
+  useEffect(() => {
+    if (el?.type === "text" && (el as any).fontFamily) {
+      loadFont((el as any).fontFamily);
+    }
+  }, [el?.id, (el as any)?.fontFamily]);
 
   if (!el) {
     return (
@@ -151,12 +199,15 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
               <Sec title="Tipografia">
                 <div className="space-y-1.5">
                   <Label className="text-[9px] uppercase text-muted-foreground">Fonte</Label>
-                  <Select value={t.fontFamily ?? "Inter"} onValueChange={v => onChange({ fontFamily: v } as any)}>
+                  <Select value={t.fontFamily ?? "Inter"} onValueChange={v => {
+                    loadFont(v);
+                    onChange({ fontFamily: v } as any);
+                  }}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="max-h-64">
-                      {ALL_FONTS.map(f => (
+                      {ALL_GOOGLE_FONTS.map(f => (
                         <SelectItem key={f} value={f}>
                           <span style={{ fontFamily: f }}>{f}</span>
                         </SelectItem>
@@ -328,6 +379,17 @@ export default function RightPanel({ el, onChange, onRemove, onDuplicate, onReor
                       className="h-8 text-xs text-center" />
                   </div>
                 ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[10px]"
+                  onClick={() => onChange({ x: (canvasW - (el.width ?? 0)) / 2 })}>
+                  <AlignCenterHorizontal className="w-3.5 h-3.5" /> Centrar H
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[10px]"
+                  onClick={() => onChange({ y: (canvasH - (el.height ?? 0)) / 2 })}>
+                  <AlignCenterVertical className="w-3.5 h-3.5" /> Centrar V
+                </Button>
               </div>
             </Sec>
 
