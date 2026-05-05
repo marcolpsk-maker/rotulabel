@@ -13,7 +13,7 @@ import { AnyEl } from "./types";
 import GradientPanel from "./GradientPanel";
 import { ALL_GOOGLE_FONTS, useLoadFont } from "./useFonts";
 import { cn } from "@/lib/utils";
-import { generateBarcodeDataURL, generateQRCodeDataURL, generateNutritionTableSVG } from "./generators";
+import { generateBarcodeDataURL, generateQRCodeDataURL, generateNutritionTableSVG } from "./generators_v2";
 import { Plus, ChevronsUp, ChevronUp, ChevronDown, ChevronsDown } from "lucide-react";
 
 // ─── Quick color swatches ─────────────────────────────────────────────────────

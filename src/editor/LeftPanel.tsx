@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Layout, BadgeCheck, Palette, Upload, Image as ImageIcon, Grid3X3, Award, Sparkles, Leaf, Heart, Moon, Zap, QrCode, BezierCurve } from "lucide-react";
 import { LABEL_CATEGORIES, PRESET_ICONS, PRESET_SEALS } from "./presets";
-import { generateBarcodeDataURL, randomEAN13, generateQRCodeDataURL } from "./generators";
+import { generateBarcodeDataURL, randomEAN13, generateQRCodeDataURL } from "./generators_v2";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
