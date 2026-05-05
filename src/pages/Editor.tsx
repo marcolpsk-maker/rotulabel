@@ -6,16 +6,18 @@ import LeftPanel from "@/editor/LeftPanel";
 import RightPanel from "@/editor/RightPanel";
 import CanvasStage from "@/editor/CanvasStage";
 import LayersPanel from "@/editor/LayersPanel";
+import InlineTextEditor from "@/editor/InlineTextEditor";
 import { useEditorState } from "@/editor/useEditorState";
-import { AnyEl, PRINT_PX_PER_CM, PX_PER_CM } from "@/editor/types";
+import { useFonts, ALL_GOOGLE_FONTS } from "@/editor/useFonts";
+import { AnyEl, PX_PER_CM, TextEl } from "@/editor/types";
+import { exportToPDF, exportToPNG, exportToJPG, generateThumbnail } from "@/editor/ExportEngine";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Undo2, Redo2, ZoomIn, ZoomOut, Save, Download,
-  ChevronLeft, Layers, Grid3x3, Maximize2
+  ChevronLeft, Layers, Grid3x3, Maximize2, Clock
 } from "lucide-react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
 import Konva from "konva";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -28,10 +30,15 @@ export default function Editor() {
   const [project, setProject] = useState<any>(null);
   const [zoom, setZoom] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [showZones, setShowZones] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [editingText, setEditingText] = useState<(TextEl & { id: string }) | null>(null);
+
+  // Pre-load all Google Fonts on mount
+  useFonts(ALL_GOOGLE_FONTS);
 
   const toggleVisibility = (id: string) =>
     setHiddenIds(prev => {
@@ -133,37 +140,40 @@ export default function Editor() {
   const save = async () => {
     if (!project) return;
     setSaving(true);
-    let thumbnail: string | undefined;
-    try { thumbnail = stageRef.current?.toDataURL({ pixelRatio: 0.4, mimeType: "image/jpeg", quality: 0.8 }); } catch {}
+    const thumbnail = stageRef.current ? generateThumbnail(stageRef.current) : undefined;
     const { error } = await supabase.from("label_projects").update({
       canvas_data: { elements: ed.elements } as any,
       thumbnail,
     }).eq("id", project.id);
     setSaving(false);
-    if (error) toast.error(error.message); else toast.success("Projeto salvo!");
+    if (error) { toast.error(error.message); }
+    else { setSavedAt(new Date()); toast.success("Projeto salvo!"); }
   };
 
-  const exportPNG = () => {
+  const handleExportPNG = async () => {
     if (!stageRef.current) return;
-    const ratio = PRINT_PX_PER_CM / PX_PER_CM / zoom;
-    const url = stageRef.current.toDataURL({ pixelRatio: ratio, mimeType: "image/png" });
-    const a = document.createElement("a");
-    a.href = url; a.download = `${project?.name ?? "rotulo"}.png`; a.click();
-    toast.success("PNG exportado em 300dpi!");
+    try { await exportToPNG(stageRef.current); toast.success("PNG 300dpi exportado!"); }
+    catch (e) { toast.error("Erro ao exportar PNG"); }
   };
 
-  const exportPDF = () => {
+  const handleExportJPG = async () => {
+    if (!stageRef.current) return;
+    try { await exportToJPG(stageRef.current); toast.success("JPG 300dpi exportado!"); }
+    catch (e) { toast.error("Erro ao exportar JPG"); }
+  };
+
+  const handleExportPDF = async () => {
     if (!stageRef.current || !project) return;
-    const ratio = PRINT_PX_PER_CM / PX_PER_CM / zoom;
-    const url = stageRef.current.toDataURL({ pixelRatio: ratio, mimeType: "image/png" });
-    const pdf = new jsPDF({
-      unit: "cm",
-      format: [project.width_cm, project.height_cm],
-      orientation: project.width_cm > project.height_cm ? "l" : "p",
-    });
-    pdf.addImage(url, "PNG", 0, 0, project.width_cm, project.height_cm);
-    pdf.save(`${project.name ?? "rotulo"}.pdf`);
-    toast.success("PDF exportado para gráfica!");
+    try {
+      await exportToPDF(stageRef.current, widthPx, heightPx, { dpi: 300, bleedMm: 3, cropMarks: true });
+      toast.success("PDF para gráfica exportado! (300dpi + marcas de corte)");
+    } catch (e) { toast.error("Erro ao exportar PDF"); }
+  };
+
+  // Double-click: open inline text editor
+  const handleDblClick = (id: string) => {
+    const el = ed.elements.find(e => e.id === id);
+    if (el?.type === "text") setEditingText(el as TextEl & { id: string });
   };
 
   const fitToScreen = () => {
@@ -283,22 +293,45 @@ export default function Editor() {
         <div className="w-px h-5 bg-border"/>
 
         {/* Save + Export */}
-        <Button size="sm" variant="outline" onClick={save} disabled={saving} className="h-8 gap-1.5">
-          <Save className="w-3.5 h-3.5"/>
-          {saving ? "Salvando…" : "Salvar"}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {savedAt && !saving && (
+            <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1" title={`Salvo às ${savedAt.toLocaleTimeString()}`}>
+              <Clock className="w-3 h-3"/>
+              {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          <Button size="sm" variant="outline" onClick={save} disabled={saving} className="h-8 gap-1.5">
+            <Save className="w-3.5 h-3.5"/>
+            {saving ? "Salvando…" : "Salvar"}
+          </Button>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" className="h-8 gap-1.5 bg-gradient-canva shadow-glow border-none">
               <Download className="w-3.5 h-3.5"/>Exportar
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[200px]">
-            <DropdownMenuItem onClick={exportPDF} className="gap-2">
-              <span className="text-base">📄</span> PDF para gráfica (300dpi)
+          <DropdownMenuContent align="end" className="min-w-[220px]">
+            <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+              <span className="text-base">📄</span>
+              <div>
+                <p className="text-xs font-semibold">PDF para gráfica</p>
+                <p className="text-[10px] text-muted-foreground">300dpi + marcas de corte + bleed 3mm</p>
+              </div>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={exportPNG} className="gap-2">
-              <span className="text-base">🖼️</span> PNG alta resolução
+            <DropdownMenuItem onClick={handleExportPNG} className="gap-2">
+              <span className="text-base">🖼️</span>
+              <div>
+                <p className="text-xs font-semibold">PNG 300 DPI</p>
+                <p className="text-[10px] text-muted-foreground">Alta resolução, fundo transparente</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportJPG} className="gap-2">
+              <span className="text-base">🎨</span>
+              <div>
+                <p className="text-xs font-semibold">JPG 300 DPI</p>
+                <p className="text-[10px] text-muted-foreground">Ideal para visualização e envio</p>
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -347,10 +380,19 @@ export default function Editor() {
                   onToggleSelect={ed.toggleSelect}
                   onClearSelection={ed.clearSelection}
                   onChange={ed.update}
+                  onDblClick={handleDblClick}
                   stageRef={stageRef}
                   showZoneGuides={showZones}
                   snapEnabled={snapEnabled}
                   onDropAsset={onDropAsset}
+                />
+                {/* Inline text editor overlay */}
+                <InlineTextEditor
+                  editing={editingText}
+                  stageRef={stageRef}
+                  zoom={zoom}
+                  onChange={(id, text) => ed.update(id, { text } as any)}
+                  onClose={() => setEditingText(null)}
                 />
               </div>
 

@@ -90,7 +90,7 @@ function DropOverlay({ active }: { active: boolean }) {
 // ─── Main Stage ───────────────────────────────────────────────────────────────
 export default function CanvasStage({
   width, height, scale, setScale, elements, selectedId, selectedIds = [],
-  onSelect, onToggleSelect, onClearSelection, onChange, stageRef,
+  onSelect, onToggleSelect, onClearSelection, onDblClick, onChange, stageRef,
   showZoneGuides = false, snapEnabled = true,
   onDropAsset,
 }: {
@@ -102,6 +102,7 @@ export default function CanvasStage({
   onSelect: (id: string | null) => void;
   onToggleSelect?: (id: string) => void;
   onClearSelection?: () => void;
+  onDblClick?: (id: string) => void;
   onChange: (id: string, patch: Partial<AnyEl>) => void;
   stageRef: React.MutableRefObject<Konva.Stage | null>;
   showZoneGuides?: boolean;
@@ -209,6 +210,7 @@ export default function CanvasStage({
         else onSelect(el.id);
       },
       onTap: () => onSelect(el.id),
+      onDblClick: () => onDblClick?.(el.id),
       onDragEnd: (e: any) => {
         let nx = e.target.x(); let ny = e.target.y();
         if (snapEnabled) { nx = snap(nx); ny = snap(ny); e.target.x(nx); e.target.y(ny); }
