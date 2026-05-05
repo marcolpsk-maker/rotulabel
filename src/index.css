@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 30% 99%;
+    --foreground: 240 14% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 14% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 14% 12%;
+
+    --primary: 258 90% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 220 90% 62%;
+
+    --secondary: 240 12% 96%;
+    --secondary-foreground: 240 14% 12%;
+
+    --muted: 240 12% 96%;
+    --muted-foreground: 240 8% 46%;
+
+    --accent: 187 80% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 240 12% 90%;
+    --input: 240 12% 90%;
+    --ring: 258 90% 60%;
+
+    --radius: 0.75rem;
+
+    --gradient-brand: linear-gradient(135deg, hsl(258 90% 60%), hsl(187 80% 50%));
+    --gradient-soft: linear-gradient(180deg, hsl(258 90% 98%), hsl(187 80% 97%));
+    --gradient-canva: linear-gradient(135deg, hsl(258 90% 60%) 0%, hsl(220 90% 62%) 50%, hsl(187 80% 50%) 100%);
+
+    --shadow-sm: 0 1px 2px 0 hsl(240 14% 12% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(240 14% 12% / 0.08);
+    --shadow-lg: 0 12px 32px -8px hsl(240 14% 12% / 0.12);
+    --shadow-glow: 0 8px 32px -8px hsl(258 90% 60% / 0.35);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 14% 12%;
+    --sidebar-primary: 258 90% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 12% 96%;
+    --sidebar-accent-foreground: 240 14% 12%;
+    --sidebar-border: 240 12% 90%;
+    --sidebar-ring: 258 90% 60%;
+  }
+
+  .dark {
+    --background: 240 14% 8%;
+    --foreground: 240 12% 96%;
+    --card: 240 14% 11%;
+    --card-foreground: 240 12% 96%;
+    --popover: 240 14% 11%;
+    --popover-foreground: 240 12% 96%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 10% 18%;
+    --secondary-foreground: 240 12% 96%;
+    --muted: 240 10% 18%;
+    --muted-foreground: 240 8% 65%;
+    --accent: 187 80% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 10% 22%;
+    --input: 240 10% 22%;
+    --ring: 258 90% 66%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; font-feature-settings: "ss01", "cv11"; }
+  html, body, #root { height: 100%; }
+}
+
+@layer utilities {
+  .bg-gradient-brand { background-image: var(--gradient-brand); }
+  .bg-gradient-soft { background-image: var(--gradient-soft); }
+  .bg-gradient-canva { background-image: var(--gradient-canva); }
+  .text-gradient-brand {
+    background-image: var(--gradient-canva);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-elevated { box-shadow: var(--shadow-lg); }
+
+  /* Canvas dot grid background */
+  .canvas-bg {
+    background-color: hsl(240 12% 96%);
+    background-image: radial-gradient(hsl(240 12% 86%) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+}
