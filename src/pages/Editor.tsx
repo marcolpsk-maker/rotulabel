@@ -30,6 +30,7 @@ export default function Editor() {
   const [saving, setSaving] = useState(false);
   const [showZones, setShowZones] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(true);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
   const toggleVisibility = (id: string) =>
@@ -232,6 +233,13 @@ export default function Editor() {
           >
             <Layers className="w-3.5 h-3.5"/>
           </Button>
+          <Button
+            size="icon" variant={snapEnabled ? "default" : "ghost"}
+            className="h-7 w-7" onClick={() => setSnapEnabled(v => !v)}
+            title={snapEnabled ? "Snap ativado (5px)" : "Snap desativado"}
+          >
+            <span className="text-[10px] font-black">⊞</span>
+          </Button>
           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={fitToScreen} title="Ajustar à tela">
             <Maximize2 className="w-3.5 h-3.5"/>
           </Button>
@@ -302,13 +310,13 @@ export default function Editor() {
                   onChange={ed.update}
                   stageRef={stageRef}
                   showZoneGuides={showZones}
+                  snapEnabled={snapEnabled}
                 />
               </div>
 
-              {/* Keyboard shortcuts hint */}
               <div className="absolute -bottom-6 left-0 right-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <span className="text-[9px] text-muted-foreground/60">
-                  Del · Ctrl+Z · Ctrl+D · Setas para mover
+                  Del · Ctrl+Z/Y · Ctrl+D · Setas · {snapEnabled ? "Snap ✓" : "Snap off"}
                 </span>
               </div>
             </div>

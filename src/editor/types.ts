@@ -13,11 +13,11 @@ export interface BaseEl {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
-  // Gradient fill
+  // Gradient fill — multi-stop Konva-compatible
   gradient?: {
     type: "linear" | "radial";
-    colors: string[];
-    angle?: number;
+    colorStops: { offset: number; color: string }[]; // offset: 0.0–1.0
+    angle?: number; // degrees, for linear
   } | null;
   // Shadow
   shadowColor?: string;
@@ -37,6 +37,7 @@ export interface TextEl extends BaseEl {
   fontSize: number;
   fontFamily: string;
   fontStyle?: "normal" | "bold" | "italic" | "bold italic";
+  fontWeight?: number; // 100 | 200 | ... | 900
   align?: "left" | "center" | "right";
   letterSpacing?: number;
   lineHeight?: number;
@@ -92,8 +93,19 @@ export type AnyEl = TextEl | RectEl | CircleEl | LineEl | ImageEl | BarcodeEl | 
 export const PX_PER_CM = 37.795; // ~96 dpi screen
 export const PRINT_DPI = 300;
 export const PRINT_PX_PER_CM = PRINT_DPI / 2.54;
+export const SNAP_GRID = 5; // px snap-to-grid size
 
 export const newId = () => Math.random().toString(36).slice(2, 10);
+
+// Default gradient presets
+export const GRADIENT_PRESETS: { name: string; gradient: NonNullable<import('./types').BaseEl['gradient']> }[] = [
+  { name: "Roxo → Ciano",  gradient: { type: "linear", angle: 135, colorStops: [{ offset: 0, color: "#7c3aed" }, { offset: 1, color: "#06b6d4" }] } },
+  { name: "Gold Premium",  gradient: { type: "linear", angle: 135, colorStops: [{ offset: 0, color: "#1c1009" }, { offset: 0.5, color: "#b45309" }, { offset: 1, color: "#fbbf24" }] } },
+  { name: "Verde Natura",  gradient: { type: "linear", angle: 135, colorStops: [{ offset: 0, color: "#0a3d2e" }, { offset: 1, color: "#1f7a4d" }] } },
+  { name: "Fogo Thermo",   gradient: { type: "linear", angle: 90,  colorStops: [{ offset: 0, color: "#7f1d1d" }, { offset: 0.5, color: "#dc2626" }, { offset: 1, color: "#f97316" }] } },
+  { name: "Radial Dark",   gradient: { type: "radial",              colorStops: [{ offset: 0, color: "#1a1f3a" }, { offset: 1, color: "#0a0a14" }] } },
+  { name: "Radial Gold",   gradient: { type: "radial",              colorStops: [{ offset: 0, color: "#fbbf24" }, { offset: 1, color: "#1c1009" }] } },
+];
 
 // Preset label sizes (cm)
 export const LABEL_SIZES = [
