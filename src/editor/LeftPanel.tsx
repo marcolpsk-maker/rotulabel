@@ -78,6 +78,13 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2">{children}</p>;
 }
 
+// Helper: set drag data for HTML5 drag-to-canvas
+function setDragData(e: React.DragEvent, type: string, data: Record<string, any>) {
+  e.dataTransfer.effectAllowed = "copy";
+  e.dataTransfer.setData("el-type", type);
+  e.dataTransfer.setData("el-data", JSON.stringify(data));
+}
+
 export default function LeftPanel({ onAdd, onLoadTemplate, canvasW, canvasH }: {
   onAdd: (el: any) => void;
   onLoadTemplate: (els: any[]) => void;
@@ -176,24 +183,29 @@ export default function LeftPanel({ onAdd, onLoadTemplate, canvasW, canvasH }: {
 
             {/* Typography */}
             <div>
-              <SectionTitle>Tipografia — clique para adicionar</SectionTitle>
+              <SectionTitle>Tipografia — clique ou arraste para o canvas</SectionTitle>
               <div className="space-y-1.5">
-                {TEXT_PRESETS.map(p => (
-                  <button key={p.label} onClick={() => onAdd({
-                    id: newId(), type: "text",
-                    x: canvasW * 0.29, y: canvasH * 0.3,
+                {TEXT_PRESETS.map(p => {
+                  const elData = {
+                    type: "text", x: canvasW * 0.29, y: canvasH * 0.3,
                     width: canvasW * 0.40, height: Math.round(canvasH * p.fontSize) * 1.8,
                     text: p.text, fontSize: Math.round(canvasH * p.fontSize),
                     fontFamily: p.font, fontStyle: p.style,
                     fill: "#ffffff", letterSpacing: p.ls, lineHeight: 1.2, align: "center",
-                  })}
-                    className="w-full text-left px-3 py-2 rounded-lg border border-border/40 hover:border-primary hover:bg-primary/5 transition-all group">
-                    <span className="text-[9px] text-muted-foreground group-hover:text-primary transition-colors block">{p.label}</span>
-                    <span className="leading-tight text-foreground" style={{ fontFamily: p.font, fontSize: Math.max(11, Math.round(canvasH * p.fontSize * 0.55)) }}>
-                      {p.text}
-                    </span>
-                  </button>
-                ))}
+                  };
+                  return (
+                    <button key={p.label}
+                      draggable
+                      onDragStart={e => setDragData(e, "text", elData)}
+                      onClick={() => onAdd({ ...elData, id: newId() })}
+                      className="w-full text-left px-3 py-2 rounded-lg border border-border/40 hover:border-primary hover:bg-primary/5 transition-all group cursor-grab active:cursor-grabbing">
+                      <span className="text-[9px] text-muted-foreground group-hover:text-primary transition-colors block">{p.label}</span>
+                      <span className="leading-tight text-foreground" style={{ fontFamily: p.font, fontSize: Math.max(11, Math.round(canvasH * p.fontSize * 0.55)) }}>
+                        {p.text}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -201,17 +213,18 @@ export default function LeftPanel({ onAdd, onLoadTemplate, canvasW, canvasH }: {
             <div>
               <SectionTitle>Selos e badges</SectionTitle>
               <div className="grid grid-cols-2 gap-1.5">
-                {BADGES.map(b => (
-                  <button key={b} onClick={() => onAdd({
-                    id: newId(), type: "text", text: b,
-                    x: 20, y: 20, width: 130, height: 28,
-                    fontSize: 10, fontFamily: "Montserrat", fontStyle: "bold",
-                    fill: "#ffffff", letterSpacing: 1, align: "center",
-                  })}
-                    className="px-2 py-2 text-[9px] font-black rounded-full bg-gradient-canva text-white hover:scale-105 active:scale-95 transition-transform tracking-wide truncate">
-                    {b}
-                  </button>
-                ))}
+                {BADGES.map(b => {
+                  const elData = { type: "text", text: b, x: 20, y: 20, width: 130, height: 28, fontSize: 10, fontFamily: "Montserrat", fontStyle: "bold", fill: "#ffffff", letterSpacing: 1, align: "center" };
+                  return (
+                    <button key={b}
+                      draggable
+                      onDragStart={e => setDragData(e, "text", elData)}
+                      onClick={() => onAdd({ ...elData, id: newId() })}
+                      className="px-2 py-2 text-[9px] font-black rounded-full bg-gradient-canva text-white hover:scale-105 active:scale-95 transition-transform tracking-wide truncate cursor-grab">
+                      {b}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -219,16 +232,19 @@ export default function LeftPanel({ onAdd, onLoadTemplate, canvasW, canvasH }: {
             <div>
               <SectionTitle>Formas geométricas</SectionTitle>
               <div className="grid grid-cols-2 gap-2">
-                {SHAPES.map(s => (
-                  <button key={s.label} onClick={() => onAdd({
-                    id: newId(), type: s.type,
-                    x: 40, y: 40, ...s.defaultProps,
-                  })}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border/40 hover:border-primary hover:bg-primary/5 transition-all group">
-                    <span className="text-2xl group-hover:scale-110 transition-transform">{s.icon}</span>
-                    <span className="text-[9px] text-muted-foreground text-center leading-tight">{s.label}</span>
-                  </button>
-                ))}
+                {SHAPES.map(s => {
+                  const elData = { type: s.type, x: 40, y: 40, ...s.defaultProps };
+                  return (
+                    <button key={s.label}
+                      draggable
+                      onDragStart={e => setDragData(e, s.type, elData)}
+                      onClick={() => onAdd({ ...elData, id: newId() })}
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border/40 hover:border-primary hover:bg-primary/5 transition-all group cursor-grab active:cursor-grabbing">
+                      <span className="text-2xl group-hover:scale-110 transition-transform">{s.icon}</span>
+                      <span className="text-[9px] text-muted-foreground text-center leading-tight">{s.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

@@ -74,17 +74,28 @@ export default function Editor() {
       if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); e.shiftKey ? ed.redo() : ed.undo(); }
       if ((e.ctrlKey || e.metaKey) && e.key === "y") { e.preventDefault(); ed.redo(); }
       if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(); }
-      if ((e.ctrlKey || e.metaKey) && e.key === "d") { e.preventDefault(); if (ed.selectedId) ed.duplicate(ed.selectedId); }
-      if ((e.key === "Delete" || e.key === "Backspace") && ed.selectedId) ed.remove(ed.selectedId);
-      if (e.key === "Escape") ed.setSelectedId(null);
-      // Nudge with arrow keys
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+        e.preventDefault();
+        ed.elements.forEach(el => ed.toggleSelect(el.id));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        if (ed.selectedId) ed.duplicate(ed.selectedId);
+      }
+      // Delete: remove all selected or just focused element
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (ed.selectedIds.length > 1) ed.removeSelected();
+        else if (ed.selectedId) ed.remove(ed.selectedId);
+      }
+      if (e.key === "Escape") ed.clearSelection();
+      // Arrow nudge (single element)
       if (ed.selectedId && ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
         e.preventDefault();
         const delta = e.shiftKey ? 10 : 1;
         const el = ed.elements.find(x => x.id === ed.selectedId);
         if (!el) return;
         const dx = e.key === "ArrowLeft" ? -delta : e.key === "ArrowRight" ? delta : 0;
-        const dy = e.key === "ArrowUp" ? -delta : e.key === "ArrowDown" ? delta : 0;
+        const dy = e.key === "ArrowUp"   ? -delta : e.key === "ArrowDown"  ? delta : 0;
         ed.update(ed.selectedId, { x: el.x + dx, y: el.y + dy });
       }
     };
@@ -93,7 +104,31 @@ export default function Editor() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ed]);
 
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!project) return;
+    const t = setInterval(() => { save(); }, 30_000);
+    return () => clearInterval(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project, ed.elements]);
+
   const selected = ed.elements.find(e => e.id === ed.selectedId) ?? null;
+
+  // HTML5 drag from LeftPanel → canvas: create element at drop position
+  const onDropAsset = (type: string, data: any, x: number, y: number) => {
+    if (type === "image" && data.src) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = data.src;
+      img.onload = () => {
+        const max = Math.min(widthPx * 0.5, 300);
+        const r = Math.min(max / img.width, max / img.height, 1);
+        ed.add({ ...data, type, x, y, width: img.width * r, height: img.height * r });
+      };
+    } else {
+      ed.add({ ...data, type, x, y });
+    }
+  };
 
   const save = async () => {
     if (!project) return;
@@ -304,13 +339,18 @@ export default function Editor() {
                   width={widthPx}
                   height={heightPx}
                   scale={zoom}
+                  setScale={setZoom}
                   elements={ed.elements.filter(e => !hiddenIds.has(e.id))}
                   selectedId={ed.selectedId}
+                  selectedIds={ed.selectedIds}
                   onSelect={ed.setSelectedId}
+                  onToggleSelect={ed.toggleSelect}
+                  onClearSelection={ed.clearSelection}
                   onChange={ed.update}
                   stageRef={stageRef}
                   showZoneGuides={showZones}
                   snapEnabled={snapEnabled}
+                  onDropAsset={onDropAsset}
                 />
               </div>
 
