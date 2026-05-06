@@ -34,7 +34,7 @@ export default function Home() {
           </div>
           <div>
             <span className="text-white font-bold text-lg">Rotulabel</span>
-            <span className="text-[#7c3aed] text-xs ml-1 font-medium">PRO</span>
+            <span className="text-[#7c3aed] text-xs ml-1 font-medium">PRO ✦</span>
           </div>
         </div>
         <div className="flex-1" />
