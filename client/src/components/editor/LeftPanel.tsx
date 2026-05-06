@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react';
 import { useEditorStore, CanvasElement } from '../../store/editorStore';
 import { LABEL_TEMPLATES, BADGES, ICONS, FONTS } from '../../data/templates';
+import { SMART_BLOCKS, ASSET_CATEGORIES } from '../../data/blocks';
 
-type Tab = 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers';
+type Tab = 'templates' | 'blocks' | 'assets' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'templates', label: 'Models', icon: '⊞' },
+  { id: 'blocks', label: 'Blocos', icon: '⬚' },
+  { id: 'assets', label: 'Assets', icon: '🌿' },
   { id: 'elements', label: 'Elem', icon: '✦' },
   { id: 'uploads', label: 'Upload', icon: '↑' },
   { id: 'text', label: 'Texto', icon: 'T' },
