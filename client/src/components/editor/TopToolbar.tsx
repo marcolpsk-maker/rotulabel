@@ -26,7 +26,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center">
             <span className="text-white text-xs font-bold">R</span>
           </div>
-          <span className="font-bold text-gray-900 text-sm hidden sm:block">RotuLab</span>
+          <span className="font-bold text-white text-sm hidden md:block">Rotulabel</span>
         </Link>
 
         {/* Project name */}
@@ -34,7 +34,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           type="text"
           value={project.name}
           onChange={(e) => setProject({ name: e.target.value })}
-          className="text-sm font-medium text-gray-700 border border-transparent rounded px-2 py-1 min-w-0 w-36 hover:border-gray-200 focus:border-violet-400 focus:outline-none bg-transparent hover:bg-gray-50 focus:bg-white transition-colors"
+          className="text-sm font-medium text-neutral-200 border border-transparent rounded px-2 py-1 min-w-0 w-28 sm:w-36 hover:border-neutral-700 focus:border-violet-400 focus:outline-none bg-transparent hover:bg-neutral-800 focus:bg-neutral-900 transition-colors"
         />
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
