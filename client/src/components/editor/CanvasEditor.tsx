@@ -183,6 +183,8 @@ function TextElement({ element, onSelect, onChange, onCommit }: RProps) {
     );
   }
 
+  const textGradient = element.gradient ? gradientProps(element) : {};
+
   return (
     <Text
       ref={textRef}
@@ -192,7 +194,7 @@ function TextElement({ element, onSelect, onChange, onCommit }: RProps) {
       fontFamily={element.fontFamily || 'Inter'}
       fontStyle={element.fontStyle || 'normal'}
       align={element.align || 'left'}
-      fill={element.fill || '#0f172a'}
+      fill={element.gradient ? undefined : (element.fill || '#0f172a')}
       width={element.width}
       letterSpacing={element.letterSpacing || 0}
       lineHeight={element.lineHeight || 1.2}
@@ -200,6 +202,7 @@ function TextElement({ element, onSelect, onChange, onCommit }: RProps) {
       strokeWidth={element.textStrokeWidth || 0}
       fillAfterStrokeEnabled
       wrap="word"
+      {...textGradient}
     />
   );
 }
