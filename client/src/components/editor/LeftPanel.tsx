@@ -143,18 +143,19 @@ export default function LeftPanel() {
   const selectedId = useEditorStore(s => s.selectedId);
 
   return (
-    <div className="w-48 border-r border-neutral-800 bg-neutral-950 flex flex-col shrink-0 overflow-hidden text-neutral-200">
-      <div className="flex border-b border-neutral-800 overflow-x-auto">
+    <div className="w-16 sm:w-44 lg:w-52 border-r border-neutral-800 bg-neutral-950 flex flex-col shrink-0 overflow-hidden text-neutral-200">
+      <div className="flex sm:flex-wrap border-b border-neutral-800 overflow-x-auto">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveLeftTab(tab.id)}
-            className={`flex flex-col items-center gap-0.5 px-1.5 py-2 text-xs transition-colors flex-1 ${
+            title={tab.label}
+            className={`flex flex-col items-center gap-0.5 px-1.5 py-2 text-xs transition-colors flex-1 min-w-[44px] ${
               activeLeftTab === tab.id ? 'text-violet-300 bg-violet-900/30 border-b-2 border-violet-500' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'
             }`}
           >
-            <span className="text-sm leading-none">{tab.icon}</span>
-            <span className="text-[10px] leading-none">{tab.label}</span>
+            <span className="text-base leading-none">{tab.icon}</span>
+            <span className="text-[10px] leading-none hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>

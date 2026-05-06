@@ -45,7 +45,7 @@ export default function RightPanel() {
 
   if (!selectedEl) {
     return (
-      <div className="w-60 border-l border-neutral-800 bg-neutral-950 flex flex-col h-full overflow-hidden">
+      <div className="hidden md:flex w-60 border-l border-neutral-800 bg-neutral-950 flex-col h-full overflow-hidden">
         <div className="p-3 border-b border-neutral-800">
           <h3 className="text-xs font-semibold text-neutral-400">Propriedades</h3>
         </div>
@@ -74,7 +74,7 @@ export default function RightPanel() {
   const isShape = selectedEl.type === 'rect' || selectedEl.type === 'circle';
 
   return (
-    <div className="w-60 border-l border-neutral-800 bg-neutral-950 flex flex-col h-full overflow-hidden text-neutral-100">
+    <div className="w-56 sm:w-60 border-l border-neutral-800 bg-neutral-950 flex flex-col h-full overflow-hidden text-neutral-100">
       <div className="p-3 border-b border-neutral-800 flex items-center justify-between">
         <h3 className="text-xs font-semibold">{label}</h3>
         <div className="flex gap-1">
