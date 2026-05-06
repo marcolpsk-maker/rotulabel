@@ -6,11 +6,9 @@ import useImage from 'use-image';
 
 // ---------- helpers ----------
 function applyVisualProps(node: Konva.Node, el: CanvasElement) {
-  // Blend mode
-  // @ts-expect-error - Konva supports globalCompositeOperation
-  node.globalCompositeOperation(el.blendMode || 'source-over');
+  const n = node as any;
+  n.globalCompositeOperation(el.blendMode || 'source-over');
 
-  // Filters (only on cached nodes)
   const f = el.filters || {};
   const filters: any[] = [];
   if (f.blur) filters.push(Konva.Filters.Blur);
@@ -21,21 +19,15 @@ function applyVisualProps(node: Konva.Node, el: CanvasElement) {
   if (f.invert) filters.push(Konva.Filters.Invert);
 
   if (filters.length) {
-    node.cache();
-    // @ts-expect-error
-    node.filters(filters);
-    // @ts-expect-error
-    if (f.blur) node.blurRadius(f.blur);
-    // @ts-expect-error
-    if (f.brightness !== undefined) node.brightness(f.brightness);
-    // @ts-expect-error
-    if (f.contrast !== undefined) node.contrast(f.contrast);
-    // @ts-expect-error
-    if (f.saturation !== undefined) node.saturation(f.saturation);
+    try { node.cache(); } catch { /* skip */ }
+    n.filters(filters);
+    if (f.blur) n.blurRadius(f.blur);
+    if (f.brightness !== undefined) n.brightness(f.brightness);
+    if (f.contrast !== undefined) n.contrast(f.contrast);
+    if (f.saturation !== undefined) n.saturation(f.saturation);
   } else {
     node.clearCache();
-    // @ts-expect-error
-    node.filters([]);
+    n.filters([]);
   }
   node.getLayer()?.batchDraw();
 }
