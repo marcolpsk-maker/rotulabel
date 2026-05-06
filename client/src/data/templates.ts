@@ -1,0 +1,163 @@
+import { LabelProject } from '../store/editorStore';
+
+export const LABEL_TEMPLATES: LabelProject[] = [
+  {
+    id: 'tpl_sono',
+    name: 'Sono & Relaxamento',
+    width: 420,
+    height: 620,
+    backgroundColor: '#1a1a2e',
+    backgroundGradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    elements: [
+      { id: 'e1', type: 'rect', x: 20, y: 20, width: 380, height: 580, fill: 'transparent', stroke: '#7c3aed', strokeWidth: 2, cornerRadius: 12, opacity: 1, draggable: true },
+      { id: 'e2', type: 'rect', x: 40, y: 40, width: 340, height: 120, fill: '#7c3aed', cornerRadius: 8, opacity: 0.9, draggable: true, gradient: { type: 'linear', colors: ['#7c3aed', '#4c1d95'], direction: 135 } },
+      { id: 'e3', type: 'text', x: 210, y: 80, text: 'SONOTRIL', fontSize: 32, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e4', type: 'text', x: 210, y: 120, text: 'PREMIUM', fontSize: 14, fontFamily: 'Montserrat', fill: '#c4b5fd', draggable: true, opacity: 1 },
+      { id: 'e5', type: 'text', x: 210, y: 200, text: 'Valeriana + Maracujá', fontSize: 18, fontFamily: 'Montserrat', fill: '#e2e8f0', draggable: true, opacity: 1 },
+      { id: 'e6', type: 'text', x: 210, y: 230, text: 'Passiflora + Melatonina', fontSize: 14, fontFamily: 'Montserrat', fill: '#94a3b8', draggable: true, opacity: 1 },
+      { id: 'e7', type: 'rect', x: 40, y: 460, width: 340, height: 60, fill: '#7c3aed', cornerRadius: 8, opacity: 0.8, draggable: true },
+      { id: 'e8', type: 'text', x: 210, y: 490, text: '60 CÁPSULAS | 500mg', fontSize: 14, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e9', type: 'circle', x: 210, y: 340, radius: 60, fill: '#7c3aed', opacity: 0.15, draggable: true },
+      { id: 'e10', type: 'text', x: 210, y: 560, text: 'Suplemento Alimentar', fontSize: 11, fontFamily: 'Montserrat', fill: '#64748b', draggable: true, opacity: 1 },
+    ],
+  },
+  {
+    id: 'tpl_emagrecedor',
+    name: 'Emagrecedor Termogênico',
+    width: 420,
+    height: 620,
+    backgroundColor: '#0f172a',
+    backgroundGradient: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
+    elements: [
+      { id: 'e1', type: 'rect', x: 20, y: 20, width: 380, height: 580, fill: 'transparent', stroke: '#ef4444', strokeWidth: 2, cornerRadius: 12, opacity: 1, draggable: true },
+      { id: 'e2', type: 'rect', x: 40, y: 40, width: 340, height: 130, fill: '#ef4444', cornerRadius: 8, opacity: 1, draggable: true, gradient: { type: 'linear', colors: ['#ef4444', '#7f1d1d'], direction: 135 } },
+      { id: 'e3', type: 'text', x: 210, y: 85, text: 'THERMOSKULL', fontSize: 28, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e4', type: 'text', x: 210, y: 125, text: 'EXTREME BURN', fontSize: 13, fontFamily: 'Montserrat', fill: '#fca5a5', draggable: true, opacity: 1 },
+      { id: 'e5', type: 'text', x: 210, y: 210, text: 'Cafeína + Pimenta Caiena', fontSize: 16, fontFamily: 'Montserrat', fill: '#f1f5f9', draggable: true, opacity: 1 },
+      { id: 'e6', type: 'text', x: 210, y: 238, text: 'Gengibre + Guaraná', fontSize: 14, fontFamily: 'Montserrat', fill: '#94a3b8', draggable: true, opacity: 1 },
+      { id: 'e7', type: 'rect', x: 40, y: 460, width: 340, height: 60, fill: '#ef4444', cornerRadius: 8, opacity: 0.9, draggable: true },
+      { id: 'e8', type: 'text', x: 210, y: 490, text: '60 CÁPSULAS | 400mg', fontSize: 14, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e9', type: 'star', x: 210, y: 350, radius: 50, fill: '#ef4444', opacity: 0.1, draggable: true },
+      { id: 'e10', type: 'text', x: 210, y: 560, text: 'Suplemento Alimentar', fontSize: 11, fontFamily: 'Montserrat', fill: '#64748b', draggable: true, opacity: 1 },
+    ],
+  },
+  {
+    id: 'tpl_vitaminas',
+    name: 'Vitaminas & Minerais',
+    width: 420,
+    height: 620,
+    backgroundColor: '#f0fdf4',
+    backgroundGradient: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+    elements: [
+      { id: 'e1', type: 'rect', x: 20, y: 20, width: 380, height: 580, fill: 'transparent', stroke: '#16a34a', strokeWidth: 2, cornerRadius: 12, opacity: 1, draggable: true },
+      { id: 'e2', type: 'rect', x: 40, y: 40, width: 340, height: 130, fill: '#16a34a', cornerRadius: 8, opacity: 1, draggable: true, gradient: { type: 'linear', colors: ['#16a34a', '#14532d'], direction: 135 } },
+      { id: 'e3', type: 'text', x: 210, y: 85, text: 'COMPLEX B', fontSize: 30, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e4', type: 'text', x: 210, y: 125, text: 'VITAMINAS & MINERAIS', fontSize: 12, fontFamily: 'Montserrat', fill: '#bbf7d0', draggable: true, opacity: 1 },
+      { id: 'e5', type: 'text', x: 210, y: 210, text: 'B1 · B2 · B3 · B5 · B6 · B7 · B9 · B12', fontSize: 14, fontFamily: 'Montserrat', fill: '#166534', draggable: true, opacity: 1 },
+      { id: 'e6', type: 'text', x: 210, y: 238, text: 'Zinco · Magnésio · Selênio', fontSize: 13, fontFamily: 'Montserrat', fill: '#4ade80', draggable: true, opacity: 1 },
+      { id: 'e7', type: 'rect', x: 40, y: 460, width: 340, height: 60, fill: '#16a34a', cornerRadius: 8, opacity: 0.9, draggable: true },
+      { id: 'e8', type: 'text', x: 210, y: 490, text: '60 CÁPSULAS | 600mg', fontSize: 14, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e10', type: 'text', x: 210, y: 560, text: 'Suplemento Alimentar', fontSize: 11, fontFamily: 'Montserrat', fill: '#64748b', draggable: true, opacity: 1 },
+    ],
+  },
+  {
+    id: 'tpl_masculino',
+    name: 'Performance Masculina',
+    width: 420,
+    height: 620,
+    backgroundColor: '#0c0a09',
+    backgroundGradient: 'linear-gradient(135deg, #0c0a09 0%, #1c1917 100%)',
+    elements: [
+      { id: 'e1', type: 'rect', x: 20, y: 20, width: 380, height: 580, fill: 'transparent', stroke: '#d97706', strokeWidth: 2, cornerRadius: 12, opacity: 1, draggable: true },
+      { id: 'e2', type: 'rect', x: 40, y: 40, width: 340, height: 130, fill: '#d97706', cornerRadius: 8, opacity: 1, draggable: true, gradient: { type: 'linear', colors: ['#d97706', '#78350f'], direction: 135 } },
+      { id: 'e3', type: 'text', x: 210, y: 85, text: 'LONGJACK', fontSize: 30, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e4', type: 'text', x: 210, y: 125, text: 'PREMIUM FORCE', fontSize: 13, fontFamily: 'Montserrat', fill: '#fde68a', draggable: true, opacity: 1 },
+      { id: 'e5', type: 'text', x: 210, y: 210, text: 'Eurycoma Longifolia', fontSize: 16, fontFamily: 'Montserrat', fill: '#fef3c7', draggable: true, opacity: 1 },
+      { id: 'e6', type: 'text', x: 210, y: 238, text: 'Tribulus + Maca Peruana', fontSize: 13, fontFamily: 'Montserrat', fill: '#92400e', draggable: true, opacity: 1 },
+      { id: 'e7', type: 'rect', x: 40, y: 460, width: 340, height: 60, fill: '#d97706', cornerRadius: 8, opacity: 0.9, draggable: true },
+      { id: 'e8', type: 'text', x: 210, y: 490, text: '60 CÁPSULAS | 500mg', fontSize: 14, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e10', type: 'text', x: 210, y: 560, text: 'Suplemento Alimentar', fontSize: 11, fontFamily: 'Montserrat', fill: '#64748b', draggable: true, opacity: 1 },
+    ],
+  },
+  {
+    id: 'tpl_feminino',
+    name: 'Saúde Feminina',
+    width: 420,
+    height: 620,
+    backgroundColor: '#fdf2f8',
+    backgroundGradient: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+    elements: [
+      { id: 'e1', type: 'rect', x: 20, y: 20, width: 380, height: 580, fill: 'transparent', stroke: '#db2777', strokeWidth: 2, cornerRadius: 12, opacity: 1, draggable: true },
+      { id: 'e2', type: 'rect', x: 40, y: 40, width: 340, height: 130, fill: '#db2777', cornerRadius: 8, opacity: 1, draggable: true, gradient: { type: 'linear', colors: ['#db2777', '#831843'], direction: 135 } },
+      { id: 'e3', type: 'text', x: 210, y: 85, text: 'FEMELIBID', fontSize: 30, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e4', type: 'text', x: 210, y: 125, text: 'EQUILÍBRIO FEMININO', fontSize: 12, fontFamily: 'Montserrat', fill: '#fbcfe8', draggable: true, opacity: 1 },
+      { id: 'e5', type: 'text', x: 210, y: 210, text: 'Dong Quai + Isoflavonas', fontSize: 16, fontFamily: 'Montserrat', fill: '#831843', draggable: true, opacity: 1 },
+      { id: 'e6', type: 'text', x: 210, y: 238, text: 'Cimicífuga + Vitex', fontSize: 13, fontFamily: 'Montserrat', fill: '#db2777', draggable: true, opacity: 1 },
+      { id: 'e7', type: 'rect', x: 40, y: 460, width: 340, height: 60, fill: '#db2777', cornerRadius: 8, opacity: 0.9, draggable: true },
+      { id: 'e8', type: 'text', x: 210, y: 490, text: '60 CÁPSULAS | 450mg', fontSize: 14, fontFamily: 'Montserrat', fill: '#ffffff', draggable: true, opacity: 1 },
+      { id: 'e10', type: 'text', x: 210, y: 560, text: 'Suplemento Alimentar', fontSize: 11, fontFamily: 'Montserrat', fill: '#64748b', draggable: true, opacity: 1 },
+    ],
+  },
+  {
+    id: 'tpl_branco',
+    name: 'Rótulo em Branco',
+    width: 420,
+    height: 620,
+    backgroundColor: '#ffffff',
+    elements: [
+      { id: 'e1', type: 'rect', x: 20, y: 20, width: 380, height: 580, fill: 'transparent', stroke: '#e2e8f0', strokeWidth: 2, cornerRadius: 12, opacity: 1, draggable: true },
+      { id: 'e2', type: 'text', x: 210, y: 310, text: 'Clique para editar', fontSize: 18, fontFamily: 'Montserrat', fill: '#94a3b8', draggable: true, opacity: 1 },
+    ],
+  },
+];
+
+export const GRADIENTS = [
+  { name: 'Roxo Profundo', colors: ['#7c3aed', '#4c1d95'], direction: 135 },
+  { name: 'Fogo', colors: ['#ef4444', '#7f1d1d'], direction: 135 },
+  { name: 'Oceano', colors: ['#0ea5e9', '#1e3a5f'], direction: 135 },
+  { name: 'Floresta', colors: ['#16a34a', '#14532d'], direction: 135 },
+  { name: 'Dourado', colors: ['#d97706', '#78350f'], direction: 135 },
+  { name: 'Rosa', colors: ['#db2777', '#831843'], direction: 135 },
+  { name: 'Pôr do Sol', colors: ['#f97316', '#dc2626'], direction: 135 },
+  { name: 'Noite', colors: ['#1e293b', '#0f172a'], direction: 135 },
+  { name: 'Menta', colors: ['#10b981', '#065f46'], direction: 135 },
+  { name: 'Lavanda', colors: ['#8b5cf6', '#6d28d9'], direction: 135 },
+  { name: 'Ciano', colors: ['#06b6d4', '#164e63'], direction: 135 },
+  { name: 'Carmim', colors: ['#e11d48', '#881337'], direction: 135 },
+];
+
+export const FONTS = [
+  'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Oswald',
+  'Raleway', 'Poppins', 'Nunito', 'Playfair Display', 'Ubuntu',
+  'Inter', 'Source Sans Pro', 'PT Sans', 'Merriweather', 'Bebas Neue',
+];
+
+export const IMAGE_CATEGORIES = [
+  {
+    name: 'Ingredientes Botânicos',
+    images: [
+      { id: 'img1', name: 'Valeriana', url: 'https://images.unsplash.com/photo-1611241893603-3c359704e0ee?w=200&h=200&fit=crop', category: 'botanicos' },
+      { id: 'img2', name: 'Açafrão/Cúrcuma', url: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=200&h=200&fit=crop', category: 'botanicos' },
+      { id: 'img3', name: 'Gengibre', url: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=200&h=200&fit=crop', category: 'botanicos' },
+      { id: 'img4', name: 'Cravo', url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&h=200&fit=crop', category: 'botanicos' },
+      { id: 'img5', name: 'Maracujá', url: 'https://images.unsplash.com/photo-1604495772376-9657f0035eb3?w=200&h=200&fit=crop', category: 'botanicos' },
+      { id: 'img6', name: 'Aloe Vera', url: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=200&h=200&fit=crop', category: 'botanicos' },
+    ],
+  },
+  {
+    name: 'Cápsulas & Pós',
+    images: [
+      { id: 'img7', name: 'Cápsulas', url: 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=200&h=200&fit=crop', category: 'capsulas' },
+      { id: 'img8', name: 'Pó Verde', url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=200&fit=crop', category: 'capsulas' },
+      { id: 'img9', name: 'Comprimidos', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&h=200&fit=crop', category: 'capsulas' },
+    ],
+  },
+  {
+    name: 'Texturas & Fundos',
+    images: [
+      { id: 'img10', name: 'Textura Escura', url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=200&h=200&fit=crop', category: 'texturas' },
+      { id: 'img11', name: 'Mármore Branco', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop', category: 'texturas' },
+      { id: 'img12', name: 'Gradiente Roxo', url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=200&h=200&fit=crop', category: 'texturas' },
+    ],
+  },
+];

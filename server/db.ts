@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, projects, InsertProject } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,31 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Project helpers
+export async function saveProject(project: InsertProject) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(projects).values(project).onDuplicateKeyUpdate({
+    set: {
+      name: project.name,
+      data: project.data,
+      thumbnail: project.thumbnail,
+    },
+  });
+  return project;
+}
+
+export async function getUserProjects(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(projects).where(eq(projects.userId, userId));
+}
+
+export async function deleteProject(id: string, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(projects).where(eq(projects.id, id));
+}
