@@ -120,7 +120,7 @@ export default function Editor() {
   }, [undo, redo, handleSave]);
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-950 overflow-hidden">
+    <div className="flex flex-col h-screen bg-white overflow-hidden">
       <TopToolbar
         onExportPDF={handleExportPDF}
         onExportPNG={handleExportPNG}
