@@ -146,15 +146,14 @@ export interface EditorState {
   removeBackground: (id: string) => Promise<void>;
 }
 
-import { LABEL_TEMPLATES } from '../data/templates';
-
-const baseTpl = LABEL_TEMPLATES.find(t => t.id === 'tpl_suplemento') ?? LABEL_TEMPLATES[0];
 const defaultProject: LabelProject = {
-  ...baseTpl,
-  id: undefined,
   name: 'Novo rótulo',
+  productType: 'capsulas',
+  widthCm: 18,
+  heightCm: 6.5,
+  backgroundColor: '#ffffff',
+  elements: [],
   guides: { enabled: true, bleedMm: 3, safeMm: 3 },
-  elements: baseTpl.elements.map(e => ({ ...e })),
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
