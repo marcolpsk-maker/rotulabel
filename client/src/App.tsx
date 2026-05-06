@@ -27,8 +27,8 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster richColors position="top-right" />
-          <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'#facc15',color:'#000',textAlign:'center',fontSize:12,padding:'2px',fontWeight:700}}>
-            ✅ BUILD NOVO ATIVO — Rotulabel v2 ({new Date().toISOString().slice(0,10)})
+          <div style={{position:'fixed',bottom:8,right:8,zIndex:9999,background:'#facc15',color:'#000',fontSize:10,padding:'2px 6px',borderRadius:4,fontWeight:700,opacity:0.85,pointerEvents:'none'}}>
+            v2
           </div>
           <Router />
         </TooltipProvider>
