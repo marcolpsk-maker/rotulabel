@@ -121,7 +121,7 @@ export interface EditorState {
   showGuides: boolean;
   history: LabelProject[];
   historyIndex: number;
-  activeLeftTab: 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers' | 'blocks' | 'assets';
+  activeLeftTab: 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers' | 'blocks' | 'assets' | 'size' | 'logo';
 
   setProject: (project: Partial<LabelProject>) => void;
   addElement: (element: CanvasElement) => void;
