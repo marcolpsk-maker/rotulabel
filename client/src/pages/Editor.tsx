@@ -4,13 +4,32 @@ import CanvasEditor from '../components/editor/CanvasEditor';
 import LeftPanel from '../components/editor/LeftPanel';
 import RightPanel from '../components/editor/RightPanel';
 import TopToolbar from '../components/editor/TopToolbar';
+import { LABEL_TEMPLATES } from '../data/templates';
 import { trpc } from '../lib/trpc';
 import { toast } from 'sonner';
 
 export default function Editor() {
-  const { project, undo, redo } = useEditorStore();
+  const { project, setProject, undo, redo } = useEditorStore();
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Carrega o template "Suplemento" como base padrão ao abrir o editor vazio
+  const bootstrapped = useRef(false);
+  useEffect(() => {
+    if (bootstrapped.current) return;
+    if (project.id) return;
+    if (project.elements && project.elements.length > 0) return;
+    const tpl = LABEL_TEMPLATES.find(t => t.id === 'tpl_suplemento');
+    if (!tpl) return;
+    bootstrapped.current = true;
+    setProject({
+      productType: tpl.productType,
+      widthCm: tpl.widthCm,
+      heightCm: tpl.heightCm,
+      backgroundColor: tpl.backgroundColor,
+      elements: tpl.elements.map(e => ({ ...e, id: `${e.id}_${Date.now()}` })),
+    });
+  }, [project.id, project.elements, setProject]);
 
   const saveProject = trpc.projects.save.useMutation({
     onSuccess: () => {
