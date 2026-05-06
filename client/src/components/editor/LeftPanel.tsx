@@ -17,9 +17,10 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export default function LeftPanel() {
-  const { activeLeftTab, setActiveLeftTab, setProject, addElement, project, selectElement, deleteElement, toggleVisibility } = useEditorStore();
+  const { activeLeftTab, setActiveLeftTab, setProject, addElement, addElements, project, selectElement, deleteElement, toggleVisibility } = useEditorStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedImages, setUploadedImages] = useState<{ id: string; url: string; name: string }[]>([]);
+  const [activeAssetCat, setActiveAssetCat] = useState<string>(ASSET_CATEGORIES[0].id);
 
   const handleTemplateClick = (tpl: typeof LABEL_TEMPLATES[0]) => {
     setProject({
