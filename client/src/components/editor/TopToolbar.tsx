@@ -20,7 +20,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
 
   return (
     <>
-      <div className="h-12 border-b border-gray-200 bg-white flex items-center px-3 gap-2 shrink-0 z-10 shadow-sm">
+      <div className="h-12 border-b border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-neutral-950 flex items-center px-2 sm:px-3 gap-1 sm:gap-2 shrink-0 z-10 shadow-md text-neutral-200 overflow-x-auto">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1.5 mr-1 no-underline">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center">
