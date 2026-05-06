@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react';
 import { useEditorStore, CanvasElement } from '../../store/editorStore';
 import { LABEL_TEMPLATES, BADGES, ICONS, FONTS } from '../../data/templates';
+import { SMART_BLOCKS, ASSET_CATEGORIES } from '../../data/blocks';
 
-type Tab = 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers';
+type Tab = 'templates' | 'blocks' | 'assets' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'templates', label: 'Models', icon: '⊞' },
+  { id: 'blocks', label: 'Blocos', icon: '⬚' },
+  { id: 'assets', label: 'Assets', icon: '🌿' },
   { id: 'elements', label: 'Elem', icon: '✦' },
   { id: 'uploads', label: 'Upload', icon: '↑' },
   { id: 'text', label: 'Texto', icon: 'T' },
@@ -14,9 +17,10 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export default function LeftPanel() {
-  const { activeLeftTab, setActiveLeftTab, setProject, addElement, project, selectElement, deleteElement, toggleVisibility } = useEditorStore();
+  const { activeLeftTab, setActiveLeftTab, setProject, addElement, addElements, project, selectElement, deleteElement, toggleVisibility } = useEditorStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedImages, setUploadedImages] = useState<{ id: string; url: string; name: string }[]>([]);
+  const [activeAssetCat, setActiveAssetCat] = useState<string>(ASSET_CATEGORIES[0].id);
 
   const handleTemplateClick = (tpl: typeof LABEL_TEMPLATES[0]) => {
     setProject({
@@ -139,15 +143,14 @@ export default function LeftPanel() {
   const selectedId = useEditorStore(s => s.selectedId);
 
   return (
-    <div className="w-44 border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
-      {/* Tab bar */}
-      <div className="flex border-b border-gray-200 overflow-x-auto">
+    <div className="w-48 border-r border-neutral-800 bg-neutral-950 flex flex-col shrink-0 overflow-hidden text-neutral-200">
+      <div className="flex border-b border-neutral-800 overflow-x-auto">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveLeftTab(tab.id)}
             className={`flex flex-col items-center gap-0.5 px-1.5 py-2 text-xs transition-colors flex-1 ${
-              activeLeftTab === tab.id ? 'text-violet-600 bg-violet-50 border-b-2 border-violet-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              activeLeftTab === tab.id ? 'text-violet-300 bg-violet-900/30 border-b-2 border-violet-500' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'
             }`}
           >
             <span className="text-sm leading-none">{tab.icon}</span>
@@ -156,8 +159,50 @@ export default function LeftPanel() {
         ))}
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto p-2">
+
+        {activeLeftTab === 'blocks' && (
+          <div className="space-y-2">
+            <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wide px-1 mb-2">Smart Blocks</p>
+            {SMART_BLOCKS.map(b => (
+              <button
+                key={b.id}
+                onClick={() => addElements(b.build(40, 40))}
+                className="w-full text-left p-2 rounded-lg border border-neutral-800 hover:border-violet-500 hover:bg-violet-900/20 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{b.preview}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-neutral-100 truncate">{b.name}</div>
+                    <div className="text-[10px] text-neutral-500 truncate">{b.description}</div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {activeLeftTab === 'assets' && (
+          <div>
+            <div className="flex gap-1 mb-2 overflow-x-auto">
+              {ASSET_CATEGORIES.map(cat => (
+                <button key={cat.id} onClick={() => setActiveAssetCat(cat.id)}
+                  className={`px-2 py-1 text-[10px] rounded whitespace-nowrap ${activeAssetCat === cat.id ? 'bg-violet-600 text-white' : 'bg-neutral-900 text-neutral-400 hover:text-neutral-200'}`}>
+                  {cat.icon} {cat.name}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {ASSET_CATEGORIES.find(c => c.id === activeAssetCat)?.items.map(item => (
+                <button key={item.id}
+                  onClick={() => addElement({ id: `el_${Date.now()}`, type: 'image', x: 30, y: 30, width: 80, height: 80, src: item.src, opacity: 1, visible: true })}
+                  className="rounded overflow-hidden border border-neutral-800 hover:border-violet-500 transition-all aspect-square bg-neutral-900">
+                  <img src={item.src} alt={item.name} className="w-full h-full object-contain" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Templates */}
         {activeLeftTab === 'templates' && (
