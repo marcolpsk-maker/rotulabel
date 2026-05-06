@@ -393,7 +393,7 @@ export default function CanvasEditor() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-neutral-200 dark:bg-neutral-900 overflow-auto p-8">
+    <div className="flex-1 flex items-center justify-center bg-slate-100 overflow-auto p-8">
       <div className="relative">
         <div className="absolute -top-7 left-0 right-0 flex items-center justify-center text-xs text-neutral-500 font-medium">
           {project.widthCm} × {project.heightCm} cm
