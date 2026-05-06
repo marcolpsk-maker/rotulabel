@@ -19,14 +19,14 @@ export const appRouter = router({
   projects: router({
     save: protectedProcedure
       .input(z.object({
-        id: z.string(),
+        id: z.string().optional(),
         name: z.string(),
         data: z.string(),
         thumbnail: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const project = await saveProject({
-          id: input.id === 'new' ? `proj_${Date.now()}_${ctx.user.id}` : input.id,
+          id: (!input.id || input.id === 'new') ? `proj_${Date.now()}_${ctx.user.id}` : input.id,
           userId: ctx.user.id,
           name: input.name,
           data: input.data,

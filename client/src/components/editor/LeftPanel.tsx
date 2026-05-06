@@ -1,211 +1,216 @@
-import { useState } from 'react';
-import { useEditorStore } from '../../store/editorStore';
-import { LABEL_TEMPLATES, IMAGE_CATEGORIES } from '../../data/templates';
+import { useRef, useState } from 'react';
+import { useEditorStore, CanvasElement } from '../../store/editorStore';
+import { LABEL_TEMPLATES, BADGES, ICONS, FONTS } from '../../data/templates';
+
+type Tab = 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers';
+
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'templates', label: 'Models', icon: '⊞' },
+  { id: 'elements', label: 'Elem', icon: '✦' },
+  { id: 'uploads', label: 'Upload', icon: '↑' },
+  { id: 'text', label: 'Texto', icon: 'T' },
+  { id: 'shapes', label: 'Formas', icon: '□' },
+  { id: 'layers', label: 'Camadas', icon: '≡' },
+];
 
 export default function LeftPanel() {
-  const { activeLeftTab, setActiveLeftTab, setProject, addElement, project } = useEditorStore();
-  const [selectedCategory, setSelectedCategory] = useState(0);
+  const { activeLeftTab, setActiveLeftTab, setProject, addElement, project, selectElement, deleteElement, toggleVisibility } = useEditorStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedImages, setUploadedImages] = useState<{ id: string; url: string; name: string }[]>([]);
 
-  const loadTemplate = (template: typeof LABEL_TEMPLATES[0]) => {
+  const handleTemplateClick = (tpl: typeof LABEL_TEMPLATES[0]) => {
     setProject({
-      ...template,
-      id: `proj_${Date.now()}`,
-      name: template.name,
+      name: tpl.name,
+      productType: tpl.productType,
+      widthCm: tpl.widthCm,
+      heightCm: tpl.heightCm,
+      backgroundColor: tpl.backgroundColor,
+      elements: tpl.elements,
+    });
+    selectElement(null);
+  };
+
+  const handleAddText = (size: 'title' | 'subtitle' | 'body') => {
+    const sizes = { title: 32, subtitle: 20, body: 14 };
+    const texts = { title: 'Título', subtitle: 'Subtítulo', body: 'Texto' };
+    addElement({
+      id: `el_${Date.now()}`,
+      type: 'text',
+      x: 20, y: 20,
+      text: texts[size],
+      fontSize: sizes[size],
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fill: '#0f172a',
+      align: 'left',
+      opacity: 1,
+      visible: true,
     });
   };
 
-  const addShape = (type: 'rect' | 'circle' | 'star' | 'triangle') => {
-    const id = `el_${Date.now()}`;
-    const centerX = project.width / 2;
-    const centerY = project.height / 2;
-    if (type === 'rect') {
-      addElement({ id, type: 'rect', x: centerX - 60, y: centerY - 30, width: 120, height: 60, fill: '#7c3aed', cornerRadius: 4, draggable: true, opacity: 1 });
-    } else if (type === 'circle') {
-      addElement({ id, type: 'circle', x: centerX, y: centerY, radius: 50, fill: '#7c3aed', draggable: true, opacity: 1 });
-    } else if (type === 'star') {
-      addElement({ id, type: 'star', x: centerX, y: centerY, radius: 50, fill: '#d97706', draggable: true, opacity: 1 });
-    } else if (type === 'triangle') {
-      addElement({ id, type: 'triangle', x: centerX, y: centerY, radius: 50, fill: '#ef4444', draggable: true, opacity: 1 });
+  const handleAddFont = (font: string) => {
+    addElement({
+      id: `el_${Date.now()}`,
+      type: 'text',
+      x: 20, y: 20,
+      text: font,
+      fontSize: 18,
+      fontFamily: font,
+      fontStyle: 'normal',
+      fill: '#0f172a',
+      align: 'left',
+      opacity: 1,
+      visible: true,
+    });
+  };
+
+  const handleAddBadge = (badge: typeof BADGES[0]) => {
+    addElement({
+      id: `el_${Date.now()}`,
+      type: 'badge',
+      x: 20, y: 20,
+      text: badge.text,
+      fontSize: 11,
+      fontFamily: 'Montserrat',
+      fontStyle: 'bold',
+      fill: badge.textColor,
+      align: 'center',
+      width: 100,
+      opacity: 1,
+      visible: true,
+      badgeColor: badge.color,
+      badgeTextColor: badge.textColor,
+    });
+  };
+
+  const handleAddIcon = (icon: string) => {
+    addElement({
+      id: `el_${Date.now()}`,
+      type: 'text',
+      x: 20, y: 20,
+      text: icon,
+      fontSize: 32,
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fill: '#0f172a',
+      align: 'left',
+      opacity: 1,
+      visible: true,
+    });
+  };
+
+  const handleAddShape = (shape: 'rect' | 'circle' | 'line') => {
+    if (shape === 'rect') {
+      addElement({ id: `el_${Date.now()}`, type: 'rect', x: 20, y: 20, width: 120, height: 60, fill: '#6366f1', strokeWidth: 0, cornerRadius: 0, opacity: 1, visible: true });
+    } else if (shape === 'circle') {
+      addElement({ id: `el_${Date.now()}`, type: 'circle', x: 20, y: 20, width: 80, height: 80, fill: '#6366f1', strokeWidth: 0, opacity: 1, visible: true });
+    } else {
+      addElement({ id: `el_${Date.now()}`, type: 'line', x: 20, y: 20, width: 120, stroke: '#0f172a', strokeWidth: 2, opacity: 1, visible: true });
     }
   };
 
-  const addText = (preset: { text: string; fontSize: number; fontFamily: string; fill: string }) => {
-    const id = `el_${Date.now()}`;
-    addElement({
-      id,
-      type: 'text',
-      x: project.width / 2,
-      y: project.height / 2,
-      text: preset.text,
-      fontSize: preset.fontSize,
-      fontFamily: preset.fontFamily,
-      fill: preset.fill,
-      width: 200,
-      draggable: true,
-      opacity: 1,
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const url = ev.target?.result as string;
+        const id = `upload_${Date.now()}_${Math.random()}`;
+        setUploadedImages(prev => [...prev, { id, url, name: file.name }]);
+      };
+      reader.readAsDataURL(file);
     });
   };
 
-  const addImage = (imgUrl: string, imgName: string) => {
-    const id = `el_${Date.now()}`;
+  const handleAddUploadedImage = (img: { id: string; url: string }) => {
     addElement({
-      id,
+      id: `el_${Date.now()}`,
       type: 'image',
-      x: project.width / 2 - 60,
-      y: project.height / 2 - 60,
-      width: 120,
-      height: 120,
-      src: imgUrl,
-      draggable: true,
+      x: 20, y: 20,
+      width: 100, height: 100,
+      src: img.url,
       opacity: 1,
+      visible: true,
     });
   };
 
-  const tabs = [
-    { id: 'templates', label: 'Templates', icon: '⬛' },
-    { id: 'elements', label: 'Elementos', icon: '◼' },
-    { id: 'images', label: 'Imagens', icon: '🖼' },
-    { id: 'text', label: 'Texto', icon: 'T' },
-  ] as const;
+  const layers = [...project.elements].reverse();
+  const selectedId = useEditorStore(s => s.selectedId);
 
   return (
-    <div className="w-64 bg-[#1e1e2e] border-r border-[#2d2d3d] flex flex-col h-full overflow-hidden">
-      {/* Tabs */}
-      <div className="flex border-b border-[#2d2d3d]">
-        {tabs.map(tab => (
+    <div className="w-44 border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
+      {/* Tab bar */}
+      <div className="flex border-b border-gray-200 overflow-x-auto">
+        {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveLeftTab(tab.id)}
-            className={`flex-1 py-2 text-xs font-medium transition-colors ${
-              activeLeftTab === tab.id
-                ? 'text-[#7c3aed] border-b-2 border-[#7c3aed] bg-[#7c3aed]/10'
-                : 'text-[#64748b] hover:text-[#94a3b8]'
+            className={`flex flex-col items-center gap-0.5 px-1.5 py-2 text-xs transition-colors flex-1 ${
+              activeLeftTab === tab.id ? 'text-violet-600 bg-violet-50 border-b-2 border-violet-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <div className="text-sm mb-0.5">{tab.icon}</div>
-            {tab.label}
+            <span className="text-sm leading-none">{tab.icon}</span>
+            <span className="text-[10px] leading-none">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-2">
 
-        {/* TEMPLATES */}
+        {/* Templates */}
         {activeLeftTab === 'templates' && (
-          <div className="space-y-2">
-            <p className="text-xs text-[#64748b] mb-3">Clique para aplicar um template</p>
+          <div className="space-y-1.5">
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide px-1 mb-2">Modelos</p>
             {LABEL_TEMPLATES.map(tpl => (
               <button
                 key={tpl.id}
-                onClick={() => loadTemplate(tpl)}
-                className="w-full text-left group"
+                onClick={() => handleTemplateClick(tpl)}
+                className="w-full rounded-lg overflow-hidden border-2 border-transparent hover:border-violet-400 transition-all group"
               >
                 <div
-                  className="w-full h-24 rounded-lg border border-[#2d2d3d] group-hover:border-[#7c3aed] transition-colors overflow-hidden relative"
-                  style={{ background: tpl.backgroundGradient || tpl.backgroundColor }}
+                  className="w-full h-14 flex items-center justify-center"
+                  style={{ backgroundColor: tpl.backgroundColor }}
                 >
-                  {/* Mini preview */}
-                  <div className="absolute inset-0 flex flex-col p-2">
-                    <div
-                      className="w-full h-8 rounded mb-1 opacity-80"
-                      style={{ background: tpl.elements[1]?.fill || '#7c3aed' }}
-                    />
-                    <div className="text-white text-xs font-bold truncate">
-                      {tpl.elements.find(e => e.type === 'text')?.text || tpl.name}
-                    </div>
-                    <div className="text-white/50 text-xs mt-auto">
-                      {tpl.elements.filter(e => e.type === 'text').length} textos · {tpl.elements.filter(e => e.type === 'rect').length} formas
-                    </div>
-                  </div>
+                  <span className="text-white text-xs font-bold drop-shadow-sm truncate px-2">{tpl.name}</span>
                 </div>
-                <p className="text-xs text-[#94a3b8] mt-1 group-hover:text-white transition-colors">{tpl.name}</p>
+                <div className="text-[10px] text-gray-500 py-0.5 text-center bg-gray-50 group-hover:bg-violet-50 transition-colors">
+                  {tpl.widthCm} × {tpl.heightCm} cm
+                </div>
               </button>
             ))}
           </div>
         )}
 
-        {/* ELEMENTS */}
+        {/* Elements / Badges */}
         {activeLeftTab === 'elements' && (
-          <div>
-            <p className="text-xs text-[#64748b] mb-3">Clique para adicionar ao canvas</p>
-
-            <div className="mb-4">
-              <p className="text-xs font-semibold text-[#94a3b8] mb-2 uppercase tracking-wider">Formas</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { type: 'rect' as const, label: 'Retângulo', preview: '▬' },
-                  { type: 'circle' as const, label: 'Círculo', preview: '●' },
-                  { type: 'star' as const, label: 'Estrela', preview: '★' },
-                  { type: 'triangle' as const, label: 'Triângulo', preview: '▲' },
-                ].map(shape => (
-                  <button
-                    key={shape.type}
-                    onClick={() => addShape(shape.type)}
-                    className="flex flex-col items-center justify-center p-3 bg-[#252535] hover:bg-[#7c3aed]/20 border border-[#2d2d3d] hover:border-[#7c3aed] rounded-lg transition-all text-white"
-                  >
-                    <span className="text-2xl mb-1">{shape.preview}</span>
-                    <span className="text-xs text-[#94a3b8]">{shape.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-xs font-semibold text-[#94a3b8] mb-2 uppercase tracking-wider">Linhas & Divisores</p>
-              <div className="grid grid-cols-1 gap-2">
-                {[
-                  { label: 'Linha Horizontal', points: [20, 0, 180, 0] },
-                  { label: 'Linha Diagonal', points: [0, 0, 200, 40] },
-                ].map((line, i) => (
-                  <button
-                    key={i}
-                    onClick={() => addElement({
-                      id: `el_${Date.now()}`,
-                      type: 'line',
-                      x: project.width / 2 - 100,
-                      y: project.height / 2,
-                      fill: '#7c3aed',
-                      stroke: '#7c3aed',
-                      strokeWidth: 2,
-                      draggable: true,
-                      opacity: 1,
-                    })}
-                    className="flex items-center gap-2 p-2 bg-[#252535] hover:bg-[#7c3aed]/20 border border-[#2d2d3d] hover:border-[#7c3aed] rounded-lg transition-all text-white text-xs"
-                  >
-                    <span className="text-[#94a3b8]">—</span> {line.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+          <div className="space-y-3">
             <div>
-              <p className="text-xs font-semibold text-[#94a3b8] mb-2 uppercase tracking-wider">Selos & Badges</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: 'Sem Glúten', color: '#16a34a' },
-                  { label: 'Vegano', color: '#059669' },
-                  { label: 'Natural', color: '#d97706' },
-                  { label: 'Premium', color: '#7c3aed' },
-                ].map((badge, i) => (
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide px-1 mb-2">Selos / Badges</p>
+              <div className="grid grid-cols-2 gap-1">
+                {BADGES.map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => handleAddBadge(b)}
+                    className="rounded-full px-2 py-1.5 text-[10px] font-bold transition-all hover:scale-105 hover:shadow-md"
+                    style={{ backgroundColor: b.color, color: b.textColor }}
+                  >
+                    {b.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide px-1 mb-2">Ícones</p>
+              <div className="grid grid-cols-5 gap-1">
+                {ICONS.map((icon, i) => (
                   <button
                     key={i}
-                    onClick={() => addElement({
-                      id: `el_${Date.now()}`,
-                      type: 'rect',
-                      x: project.width / 2 - 40,
-                      y: project.height / 2 - 15,
-                      width: 80,
-                      height: 30,
-                      fill: badge.color,
-                      cornerRadius: 15,
-                      draggable: true,
-                      opacity: 1,
-                    })}
-                    className="flex items-center justify-center p-2 rounded-full text-white text-xs font-bold transition-all hover:scale-105"
-                    style={{ background: badge.color }}
+                    onClick={() => handleAddIcon(icon)}
+                    className="text-xl p-1 rounded hover:bg-gray-100 transition-colors"
                   >
-                    {badge.label}
+                    {icon}
                   </button>
                 ))}
               </div>
@@ -213,73 +218,164 @@ export default function LeftPanel() {
           </div>
         )}
 
-        {/* IMAGES */}
-        {activeLeftTab === 'images' && (
-          <div>
-            <p className="text-xs text-[#64748b] mb-3">Clique para adicionar ao canvas</p>
-            <div className="flex gap-1 mb-3 flex-wrap">
-              {IMAGE_CATEGORIES.map((cat, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedCategory(i)}
-                  className={`px-2 py-1 rounded text-xs transition-colors ${
-                    selectedCategory === i
-                      ? 'bg-[#7c3aed] text-white'
-                      : 'bg-[#252535] text-[#94a3b8] hover:text-white'
-                  }`}
-                >
-                  {cat.name.split(' ')[0]}
-                </button>
-              ))}
+        {/* Upload */}
+        {activeLeftTab === 'uploads' && (
+          <div className="space-y-3">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full border-2 border-dashed border-gray-200 rounded-lg py-4 text-center hover:border-violet-400 hover:bg-violet-50 transition-colors"
+            >
+              <div className="text-2xl mb-1">↑</div>
+              <p className="text-xs text-gray-500">Clique para fazer upload</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, SVG</p>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            {uploadedImages.length > 0 ? (
+              <div className="grid grid-cols-2 gap-1.5">
+                {uploadedImages.map(img => (
+                  <button
+                    key={img.id}
+                    onClick={() => handleAddUploadedImage(img)}
+                    className="rounded overflow-hidden border border-gray-200 hover:border-violet-400 transition-all aspect-square"
+                  >
+                    <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[10px] text-gray-400 text-center">Nenhuma imagem enviada ainda.</p>
+            )}
+          </div>
+        )}
+
+        {/* Text */}
+        {activeLeftTab === 'text' && (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <button
+                onClick={() => handleAddText('title')}
+                className="w-full text-left px-3 py-2.5 rounded-lg border border-gray-200 hover:border-violet-400 hover:bg-violet-50 transition-colors"
+              >
+                <span className="text-sm font-bold text-gray-800">Adicionar título</span>
+              </button>
+              <button
+                onClick={() => handleAddText('subtitle')}
+                className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:border-violet-400 hover:bg-violet-50 transition-colors"
+              >
+                <span className="text-xs font-semibold text-gray-700">Adicionar subtítulo</span>
+              </button>
+              <button
+                onClick={() => handleAddText('body')}
+                className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:border-violet-400 hover:bg-violet-50 transition-colors"
+              >
+                <span className="text-xs text-gray-600">Adicionar texto</span>
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {IMAGE_CATEGORIES[selectedCategory]?.images.map(img => (
-                <button
-                  key={img.id}
-                  onClick={() => addImage(img.url, img.name)}
-                  className="group relative rounded-lg overflow-hidden border border-[#2d2d3d] hover:border-[#7c3aed] transition-all"
-                >
-                  <img
-                    src={img.url}
-                    alt={img.name}
-                    className="w-full h-20 object-cover"
-                    crossOrigin="anonymous"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">+ Adicionar</span>
-                  </div>
-                  <p className="text-xs text-[#94a3b8] p-1 truncate">{img.name}</p>
-                </button>
-              ))}
+            <div>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide px-1 mb-2">Fontes ({FONTS.length} disponíveis)</p>
+              <div className="space-y-0.5">
+                {FONTS.map(font => (
+                  <button
+                    key={font}
+                    onClick={() => handleAddFont(font)}
+                    className="w-full text-left px-2 py-1.5 rounded hover:bg-gray-50 transition-colors"
+                    style={{ fontFamily: font }}
+                  >
+                    <span className="text-xs text-gray-700">{font}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* TEXT */}
-        {activeLeftTab === 'text' && (
+        {/* Shapes */}
+        {activeLeftTab === 'shapes' && (
           <div className="space-y-2">
-            <p className="text-xs text-[#64748b] mb-3">Clique para adicionar texto</p>
-            {[
-              { text: 'NOME DO PRODUTO', fontSize: 32, fontFamily: 'Montserrat', fill: '#ffffff', label: 'Título Principal' },
-              { text: 'Subtítulo', fontSize: 20, fontFamily: 'Montserrat', fill: '#94a3b8', label: 'Subtítulo' },
-              { text: 'Ingredientes ativos', fontSize: 16, fontFamily: 'Montserrat', fill: '#e2e8f0', label: 'Ingredientes' },
-              { text: '60 CÁPSULAS | 500mg', fontSize: 14, fontFamily: 'Montserrat', fill: '#7c3aed', label: 'Quantidade' },
-              { text: 'Suplemento Alimentar', fontSize: 11, fontFamily: 'Montserrat', fill: '#64748b', label: 'Texto Legal' },
-              { text: 'PREMIUM', fontSize: 13, fontFamily: 'Montserrat', fill: '#d97706', label: 'Badge Texto' },
-            ].map((preset, i) => (
-              <button
-                key={i}
-                onClick={() => addText(preset)}
-                className="w-full text-left p-3 bg-[#252535] hover:bg-[#7c3aed]/20 border border-[#2d2d3d] hover:border-[#7c3aed] rounded-lg transition-all"
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide px-1 mb-2">Formas</p>
+            <button
+              onClick={() => handleAddShape('rect')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-violet-400 hover:bg-violet-50 transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+              </svg>
+              <span className="text-xs text-gray-700">Retângulo</span>
+            </button>
+            <button
+              onClick={() => handleAddShape('circle')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-violet-400 hover:bg-violet-50 transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+                <circle cx="12" cy="12" r="9"/>
+              </svg>
+              <span className="text-xs text-gray-700">Círculo</span>
+            </button>
+            <button
+              onClick={() => handleAddShape('line')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-violet-400 hover:bg-violet-50 transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+                <line x1="2" y1="12" x2="22" y2="12"/>
+              </svg>
+              <span className="text-xs text-gray-700">Linha</span>
+            </button>
+          </div>
+        )}
+
+        {/* Layers */}
+        {activeLeftTab === 'layers' && (
+          <div className="space-y-1">
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide px-1 mb-2">Camadas</p>
+            {layers.length === 0 && (
+              <p className="text-[10px] text-gray-400 text-center py-4">Nenhum elemento no canvas.</p>
+            )}
+            {layers.map((el) => (
+              <div
+                key={el.id}
+                className={`flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                  selectedId === el.id ? 'bg-violet-50 border border-violet-200' : 'hover:bg-gray-50 border border-transparent'
+                }`}
+                onClick={() => selectElement(el.id)}
               >
-                <div
-                  className="font-medium truncate"
-                  style={{ fontSize: Math.min(preset.fontSize, 18), color: preset.fill === '#ffffff' ? '#e2e8f0' : preset.fill }}
+                <span className="text-xs text-gray-400 w-4">
+                  {el.type === 'text' || el.type === 'badge' ? 'T' : el.type === 'rect' ? '□' : el.type === 'circle' ? '○' : '—'}
+                </span>
+                <span className="text-xs text-gray-700 flex-1 truncate">
+                  {el.type === 'text' || el.type === 'badge' ? (el.text?.slice(0, 15) || 'Texto') : el.type}
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleVisibility(el.id); }}
+                  className="text-gray-400 hover:text-gray-600 p-0.5"
                 >
-                  {preset.text}
-                </div>
-                <div className="text-xs text-[#64748b] mt-0.5">{preset.label} · {preset.fontSize}px · {preset.fontFamily}</div>
-              </button>
+                  {el.visible !== false ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteElement(el.id); }}
+                  className="text-gray-300 hover:text-red-500 p-0.5"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         )}

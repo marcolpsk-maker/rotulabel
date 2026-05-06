@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ElementType = 'rect' | 'circle' | 'text' | 'image' | 'line' | 'star' | 'triangle';
+export type ElementType = 'text' | 'rect' | 'circle' | 'line' | 'image' | 'badge' | 'nutritionTable' | 'barcode';
 
 export interface CanvasElement {
   id: string;
@@ -9,49 +9,74 @@ export interface CanvasElement {
   y: number;
   width?: number;
   height?: number;
-  radius?: number;
+  rotation?: number;
+  opacity?: number;
+  visible?: boolean;
+  locked?: boolean;
+
+  // Text
   text?: string;
   fontSize?: number;
   fontFamily?: string;
+  fontStyle?: string; // 'normal' | 'bold' | 'italic' | 'bold italic'
+  align?: 'left' | 'center' | 'right';
   fill?: string;
+  textDecoration?: string;
+
+  // Shape
   stroke?: string;
   strokeWidth?: number;
-  opacity?: number;
-  rotation?: number;
-  scaleX?: number;
-  scaleY?: number;
-  src?: string;
-  draggable?: boolean;
-  shadowBlur?: number;
-  shadowColor?: string;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
   cornerRadius?: number;
-  gradient?: {
-    type: 'linear' | 'radial';
-    colors: string[];
-    direction?: number;
-  };
+  fillEnabled?: boolean;
+
+  // Image
+  src?: string;
+  imageData?: string;
+
+  // Badge
+  badgeText?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
+
+  // Nutrition table / barcode data
+  tableData?: NutritionData;
+  barcodeValue?: string;
 }
 
+export interface NutritionData {
+  productName: string;
+  brand: string;
+  netQuantity: string;
+  servingSize: string;
+  servingsPerPackage: string;
+  ingredients: string;
+  nutrients: { name: string; amount: string; dv: string }[];
+  warnings: string[];
+}
+
+export type ProductType = 'capsulas' | 'po' | 'liquido' | 'gel';
+
 export interface LabelProject {
-  id: string;
+  id?: string;
   name: string;
-  width: number;
-  height: number;
+  productType: ProductType;
+  widthCm: number;
+  heightCm: number;
   backgroundColor: string;
-  backgroundGradient?: string;
   elements: CanvasElement[];
 }
 
-interface EditorState {
+// 1cm = 37.795px (96dpi)
+export const CM_TO_PX = 37.795;
+
+export interface EditorState {
   project: LabelProject;
   selectedId: string | null;
-  history: LabelProject[];
-  historyIndex: number;
   zoom: number;
   showGrid: boolean;
-  activeLeftTab: 'templates' | 'elements' | 'images' | 'text';
+  history: LabelProject[];
+  historyIndex: number;
+  activeLeftTab: 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers';
 
   setProject: (project: Partial<LabelProject>) => void;
   addElement: (element: CanvasElement) => void;
@@ -67,13 +92,14 @@ interface EditorState {
   bringForward: (id: string) => void;
   sendBackward: (id: string) => void;
   duplicateElement: (id: string) => void;
+  toggleVisibility: (id: string) => void;
 }
 
 const defaultProject: LabelProject = {
-  id: 'new',
-  name: 'Novo Rótulo',
-  width: 420,
-  height: 620,
+  name: 'Novo rótulo',
+  productType: 'capsulas',
+  widthCm: 15,
+  heightCm: 5,
   backgroundColor: '#ffffff',
   elements: [],
 };
@@ -81,10 +107,10 @@ const defaultProject: LabelProject = {
 export const useEditorStore = create<EditorState>((set, get) => ({
   project: defaultProject,
   selectedId: null,
+  zoom: 1,
+  showGrid: true,
   history: [defaultProject],
   historyIndex: 0,
-  zoom: 1,
-  showGrid: false,
   activeLeftTab: 'templates',
 
   setProject: (updates) => {
@@ -102,8 +128,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   updateElement: (id, updates) => {
     const elements = get().project.elements.map(el => el.id === id ? { ...el, ...updates } : el);
-    const newProject = { ...get().project, elements };
-    set({ project: newProject });
+    set({ project: { ...get().project, elements } });
   },
 
   commitHistory: () => {
@@ -124,14 +149,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   undo: () => {
     const { historyIndex, history } = get();
     if (historyIndex > 0) {
-      set({ historyIndex: historyIndex - 1, project: history[historyIndex - 1], selectedId: null });
+      set({ project: history[historyIndex - 1], historyIndex: historyIndex - 1, selectedId: null });
     }
   },
 
   redo: () => {
     const { historyIndex, history } = get();
     if (historyIndex < history.length - 1) {
-      set({ historyIndex: historyIndex + 1, project: history[historyIndex + 1] });
+      set({ project: history[historyIndex + 1], historyIndex: historyIndex + 1, selectedId: null });
     }
   },
 
@@ -164,8 +189,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   duplicateElement: (id) => {
     const el = get().project.elements.find(e => e.id === id);
     if (el) {
-      const newEl = { ...el, id: `el_${Date.now()}`, x: el.x + 20, y: el.y + 20 };
-      get().addElement(newEl);
+      const newEl = { ...el, id: `el_${Date.now()}`, x: el.x + 10, y: el.y + 10 };
+      const elements = [...get().project.elements, newEl];
+      const newProject = { ...get().project, elements };
+      const history = get().history.slice(0, get().historyIndex + 1);
+      set({ project: newProject, history: [...history, newProject], historyIndex: history.length, selectedId: newEl.id });
     }
+  },
+
+  toggleVisibility: (id) => {
+    const elements = get().project.elements.map(el =>
+      el.id === id ? { ...el, visible: el.visible === false ? true : false } : el
+    );
+    set({ project: { ...get().project, elements } });
   },
 }));

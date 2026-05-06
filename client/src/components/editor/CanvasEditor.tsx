@@ -1,50 +1,59 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Image as KonvaImage, Transformer, Star, Line } from 'react-konva';
-import { useEditorStore, CanvasElement } from '../../store/editorStore';
+import { Stage, Layer, Rect, Circle, Text, Image as KonvaImage, Transformer, Line } from 'react-konva';
+import { useEditorStore, CanvasElement, CM_TO_PX } from '../../store/editorStore';
 import Konva from 'konva';
+import useImage from 'use-image';
 
-interface CanvasElementRendererProps {
+interface ElementRendererProps {
   element: CanvasElement;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string | null) => void;
   onChange: (id: string, attrs: Partial<CanvasElement>) => void;
   onCommit: () => void;
 }
 
-function getFillConfig(element: CanvasElement): Partial<Konva.ShapeConfig> {
-  if (element.gradient && element.width && element.height) {
-    const { gradient } = element;
-    if (gradient.type === 'linear') {
-      const rad = ((gradient.direction || 135) * Math.PI) / 180;
-      const w = element.width || 100;
-      const h = element.height || 60;
-      const x1 = w / 2 - (Math.cos(rad) * w) / 2;
-      const y1 = h / 2 - (Math.sin(rad) * h) / 2;
-      const x2 = w / 2 + (Math.cos(rad) * w) / 2;
-      const y2 = h / 2 + (Math.sin(rad) * h) / 2;
-      return {
-        fillLinearGradientStartPoint: { x: x1, y: y1 },
-        fillLinearGradientEndPoint: { x: x2, y: y2 },
-        fillLinearGradientColorStops: [0, gradient.colors[0], 1, gradient.colors[1]],
-        fill: undefined,
-      };
-    } else if (gradient.type === 'radial') {
-      const w = element.width || 100;
-      const h = element.height || 60;
-      return {
-        fillRadialGradientStartPoint: { x: w / 2, y: h / 2 },
-        fillRadialGradientEndPoint: { x: w / 2, y: h / 2 },
-        fillRadialGradientStartRadius: 0,
-        fillRadialGradientEndRadius: Math.max(w, h) / 2,
-        fillRadialGradientColorStops: [0, gradient.colors[0], 1, gradient.colors[1]],
-        fill: undefined,
-      };
-    }
-  }
-  return { fill: element.fill || '#7c3aed' };
+function ImageElement({ element, onSelect, onChange, onCommit }: ElementRendererProps) {
+  const [image] = useImage(element.src || element.imageData || '');
+  const shapeRef = useRef<Konva.Image>(null);
+
+  const handleDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+    onChange(element.id, { x: e.target.x(), y: e.target.y() });
+    onCommit();
+  }, [element.id, onChange, onCommit]);
+
+  const handleTransformEnd = useCallback(() => {
+    const node = shapeRef.current;
+    if (!node) return;
+    onChange(element.id, {
+      x: node.x(), y: node.y(),
+      width: Math.max(5, (element.width || 100) * node.scaleX()),
+      height: Math.max(5, (element.height || 100) * node.scaleY()),
+      rotation: node.rotation(),
+    });
+    node.scaleX(1); node.scaleY(1);
+    onCommit();
+  }, [element, onChange, onCommit]);
+
+  return (
+    <KonvaImage
+      ref={shapeRef}
+      id={element.id}
+      image={image}
+      x={element.x} y={element.y}
+      width={element.width || 100}
+      height={element.height || 100}
+      rotation={element.rotation || 0}
+      opacity={element.opacity ?? 1}
+      visible={element.visible !== false}
+      draggable
+      onClick={() => onSelect(element.id)}
+      onTap={() => onSelect(element.id)}
+      onDragEnd={handleDragEnd}
+      onTransformEnd={handleTransformEnd}
+    />
+  );
 }
 
-function CanvasElementRenderer({ element, isSelected, onSelect, onChange, onCommit }: CanvasElementRendererProps) {
+function ElementRenderer({ element, onSelect, onChange, onCommit }: ElementRendererProps) {
   const shapeRef = useRef<Konva.Shape>(null);
 
   const handleDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
@@ -58,47 +67,54 @@ function CanvasElementRenderer({ element, isSelected, onSelect, onChange, onComm
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
     onChange(element.id, {
-      x: node.x(),
-      y: node.y(),
+      x: node.x(), y: node.y(),
       width: Math.max(5, (element.width || 100) * scaleX),
       height: Math.max(5, (element.height || 100) * scaleY),
       rotation: node.rotation(),
-      scaleX: 1,
-      scaleY: 1,
     });
-    node.scaleX(1);
-    node.scaleY(1);
+    node.scaleX(1); node.scaleY(1);
     onCommit();
-  }, [element, onCommit]);
+  }, [element, onChange, onCommit]);
 
   const commonProps = {
     id: element.id,
-    x: element.x,
-    y: element.y,
+    x: element.x, y: element.y,
     rotation: element.rotation || 0,
     opacity: element.opacity ?? 1,
-    draggable: element.draggable !== false,
+    visible: element.visible !== false,
+    draggable: true,
     onClick: () => onSelect(element.id),
     onTap: () => onSelect(element.id),
     onDragEnd: handleDragEnd,
     onTransformEnd: handleTransformEnd,
-    shadowBlur: element.shadowBlur || 0,
-    shadowColor: element.shadowColor || '#000000',
-    shadowOffsetX: element.shadowOffsetX || 0,
-    shadowOffsetY: element.shadowOffsetY || 0,
   };
 
-  const fillConfig = getFillConfig(element);
+  if (element.type === 'text' || element.type === 'badge') {
+    return (
+      <Text
+        ref={shapeRef as React.RefObject<Konva.Text>}
+        {...commonProps}
+        text={element.text || 'Texto'}
+        fontSize={element.fontSize || 16}
+        fontFamily={element.fontFamily || 'Inter'}
+        fontStyle={element.fontStyle || 'normal'}
+        align={element.align || 'left'}
+        fill={element.fill || '#0f172a'}
+        width={element.width}
+        wrap="word"
+      />
+    );
+  }
 
   if (element.type === 'rect') {
     return (
       <Rect
-        {...commonProps}
         ref={shapeRef as React.RefObject<Konva.Rect>}
+        {...commonProps}
         width={element.width || 100}
-        height={element.height || 60}
-        {...fillConfig}
-        stroke={element.stroke}
+        height={element.height || 50}
+        fill={element.fillEnabled !== false ? (element.fill || '#6366f1') : 'transparent'}
+        stroke={element.stroke || undefined}
         strokeWidth={element.strokeWidth || 0}
         cornerRadius={element.cornerRadius || 0}
       />
@@ -106,62 +122,16 @@ function CanvasElementRenderer({ element, isSelected, onSelect, onChange, onComm
   }
 
   if (element.type === 'circle') {
-    const circleFill = element.gradient ? undefined : (element.fill || '#7c3aed');
+    const r = (element.width || 60) / 2;
     return (
       <Circle
-        {...commonProps}
         ref={shapeRef as React.RefObject<Konva.Circle>}
-        radius={element.radius || 40}
-        fill={circleFill}
-        stroke={element.stroke}
-        strokeWidth={element.strokeWidth || 0}
-      />
-    );
-  }
-
-  if (element.type === 'text') {
-    return (
-      <Text
         {...commonProps}
-        ref={shapeRef as React.RefObject<Konva.Text>}
-        text={element.text || 'Texto'}
-        fontSize={element.fontSize || 20}
-        fontFamily={element.fontFamily || 'Montserrat'}
-        fill={element.fill || '#ffffff'}
-        stroke={element.stroke}
-        strokeWidth={element.strokeWidth || 0}
-        align="center"
-        offsetX={(element.width || 200) / 2}
-        width={element.width || 200}
-      />
-    );
-  }
-
-  if (element.type === 'star') {
-    return (
-      <Star
-        {...commonProps}
-        ref={shapeRef as React.RefObject<Konva.Star>}
-        numPoints={5}
-        innerRadius={(element.radius || 40) * 0.5}
-        outerRadius={element.radius || 40}
-        fill={element.fill || '#d97706'}
-        stroke={element.stroke}
-        strokeWidth={element.strokeWidth || 0}
-      />
-    );
-  }
-
-  if (element.type === 'triangle') {
-    const r = element.radius || 40;
-    return (
-      <Line
-        {...commonProps}
-        ref={shapeRef as React.RefObject<Konva.Line>}
-        points={[0, -r, r * 0.866, r * 0.5, -r * 0.866, r * 0.5]}
-        closed
-        fill={element.fill || '#ef4444'}
-        stroke={element.stroke}
+        x={element.x + r}
+        y={element.y + r}
+        radius={r}
+        fill={element.fillEnabled !== false ? (element.fill || '#6366f1') : 'transparent'}
+        stroke={element.stroke || undefined}
         strokeWidth={element.strokeWidth || 0}
       />
     );
@@ -170,27 +140,11 @@ function CanvasElementRenderer({ element, isSelected, onSelect, onChange, onComm
   if (element.type === 'line') {
     return (
       <Line
-        {...commonProps}
         ref={shapeRef as React.RefObject<Konva.Line>}
-        points={[0, 0, element.width || 200, 0]}
-        stroke={element.stroke || element.fill || '#7c3aed'}
-        strokeWidth={element.strokeWidth || 2}
-      />
-    );
-  }
-
-  if (element.type === 'image' && element.src) {
-    const img = new window.Image();
-    img.src = element.src;
-    img.crossOrigin = 'anonymous';
-    return (
-      <KonvaImage
         {...commonProps}
-        ref={shapeRef as React.RefObject<Konva.Image>}
-        image={img}
-        width={element.width || 100}
-        height={element.height || 100}
-        cornerRadius={element.cornerRadius || 0}
+        points={[0, 0, element.width || 100, 0]}
+        stroke={element.stroke || '#0f172a'}
+        strokeWidth={element.strokeWidth || 2}
       />
     );
   }
@@ -198,10 +152,46 @@ function CanvasElementRenderer({ element, isSelected, onSelect, onChange, onComm
   return null;
 }
 
+// Grid rendered via HTML canvas (not Konva) to avoid polluting the Konva layer
+function DotGrid({ width, height }: { width: number; height: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    const spacing = 20;
+    for (let x = spacing; x < width; x += spacing) {
+      for (let y = spacing; y < height; y += spacing) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }, [width, height]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }}
+    />
+  );
+}
+
 export default function CanvasEditor() {
-  const { project, selectedId, zoom, selectElement, updateElement, commitHistory, showGrid } = useEditorStore();
+  const { project, selectedId, zoom, showGrid, selectElement, updateElement, commitHistory } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+
+  const widthPx = project.widthCm * CM_TO_PX;
+  const heightPx = project.heightCm * CM_TO_PX;
+  const scaledW = widthPx * zoom;
+  const scaledH = heightPx * zoom;
 
   useEffect(() => {
     if (!transformerRef.current || !stageRef.current) return;
@@ -215,95 +205,96 @@ export default function CanvasEditor() {
       transformerRef.current.nodes([]);
       transformerRef.current.getLayer()?.batchDraw();
     }
-  }, [selectedId]);
+  }, [selectedId, project.elements]);
 
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target === e.target.getStage()) {
       selectElement(null);
     }
   };
 
-  const scaledW = project.width * zoom;
-  const scaledH = project.height * zoom;
-
   return (
-    <div className="flex-1 flex items-center justify-center bg-[#141414] overflow-auto">
-      <div
-        className="relative shadow-2xl"
-        style={{
-          width: scaledW,
-          height: scaledH,
-          background: project.backgroundGradient || project.backgroundColor,
-          borderRadius: 4,
-        }}
-      >
-        <Stage
-          ref={stageRef}
-          width={scaledW}
-          height={scaledH}
-          scaleX={zoom}
-          scaleY={zoom}
-          onClick={handleStageClick}
-          onTap={handleStageClick}
+    <div className="flex-1 flex items-center justify-center bg-[#f1f5f9] overflow-auto p-8">
+      <div className="relative">
+        {/* Dimension label */}
+        <div className="absolute -top-7 left-0 right-0 flex items-center justify-center text-xs text-gray-400 font-medium">
+          {project.widthCm} × {project.heightCm} cm
+        </div>
+
+        {/* Label canvas container */}
+        <div
+          className="relative bg-white shadow-xl"
+          style={{
+            width: scaledW,
+            height: scaledH,
+            border: '1.5px dashed #cbd5e1',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
         >
-          <Layer>
-            {/* Background */}
-            <Rect
-              x={0}
-              y={0}
-              width={project.width}
-              height={project.height}
-              fill={project.backgroundColor}
-              listening={false}
-            />
+          {/* Dot grid (HTML canvas, not Konva) */}
+          {showGrid && <DotGrid width={scaledW} height={scaledH} />}
 
-            {/* Grid */}
-            {showGrid && Array.from({ length: Math.floor(project.width / 20) }).map((_, i) => (
-              <Line
-                key={`vg${i}`}
-                points={[(i + 1) * 20, 0, (i + 1) * 20, project.height]}
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth={1}
+          {/* Konva Stage - only elements */}
+          <Stage
+            ref={stageRef}
+            width={scaledW}
+            height={scaledH}
+            scaleX={zoom}
+            scaleY={zoom}
+            onClick={handleStageClick}
+            style={{ position: 'relative', zIndex: 1 }}
+          >
+            <Layer>
+              {/* Background */}
+              <Rect
+                x={0} y={0}
+                width={widthPx}
+                height={heightPx}
+                fill={project.backgroundColor}
                 listening={false}
               />
-            ))}
-            {showGrid && Array.from({ length: Math.floor(project.height / 20) }).map((_, i) => (
-              <Line
-                key={`hg${i}`}
-                points={[0, (i + 1) * 20, project.width, (i + 1) * 20]}
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth={1}
-                listening={false}
-              />
-            ))}
 
-            {/* Elements */}
-            {project.elements.map((el) => (
-              <CanvasElementRenderer
-                key={el.id}
-                element={el}
-                isSelected={selectedId === el.id}
-                onSelect={selectElement}
-                onChange={updateElement}
-                onCommit={commitHistory}
-              />
-            ))}
+              {/* Elements */}
+              {project.elements.map((el) => {
+                if (el.type === 'image') {
+                  return (
+                    <ImageElement
+                      key={el.id}
+                      element={el}
+                      onSelect={selectElement}
+                      onChange={updateElement}
+                      onCommit={commitHistory}
+                    />
+                  );
+                }
+                return (
+                  <ElementRenderer
+                    key={el.id}
+                    element={el}
+                    onSelect={selectElement}
+                    onChange={updateElement}
+                    onCommit={commitHistory}
+                  />
+                );
+              })}
 
-            {/* Transformer */}
-            <Transformer
-              ref={transformerRef}
-              boundBoxFunc={(oldBox, newBox) => {
-                if (newBox.width < 5 || newBox.height < 5) return oldBox;
-                return newBox;
-              }}
-              borderStroke="#7c3aed"
-              anchorStroke="#7c3aed"
-              anchorFill="#ffffff"
-              anchorSize={8}
-              rotateAnchorOffset={20}
-            />
-          </Layer>
-        </Stage>
+              {/* Transformer */}
+              <Transformer
+                ref={transformerRef}
+                boundBoxFunc={(oldBox, newBox) => {
+                  if (newBox.width < 5 || newBox.height < 5) return oldBox;
+                  return newBox;
+                }}
+                borderStroke="#6366f1"
+                anchorStroke="#6366f1"
+                anchorFill="#ffffff"
+                anchorSize={8}
+                rotateEnabled={true}
+              />
+            </Layer>
+          </Stage>
+        </div>
       </div>
     </div>
   );

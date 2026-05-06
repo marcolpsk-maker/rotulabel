@@ -1,5 +1,5 @@
-import { useRef, useCallback, useState, useEffect } from 'react';
-import { useEditorStore } from '../store/editorStore';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEditorStore, CM_TO_PX } from '../store/editorStore';
 import CanvasEditor from '../components/editor/CanvasEditor';
 import LeftPanel from '../components/editor/LeftPanel';
 import RightPanel from '../components/editor/RightPanel';
@@ -11,11 +11,10 @@ export default function Editor() {
   const { project, undo, redo } = useEditorStore();
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const stageContainerRef = useRef<HTMLDivElement>(null);
 
   const saveProject = trpc.projects.save.useMutation({
     onSuccess: () => {
-      toast.success('Projeto salvo! Seu rótulo foi salvo com sucesso.');
+      toast.success('Projeto salvo com sucesso!');
       setIsSaving(false);
     },
     onError: (err) => {
@@ -27,7 +26,7 @@ export default function Editor() {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     saveProject.mutate({
-      id: project.id,
+      id: project.id ?? undefined,
       name: project.name,
       data: JSON.stringify(project),
     });
@@ -38,39 +37,62 @@ export default function Editor() {
     try {
       const { default: jsPDF } = await import('jspdf');
       const Konva = (await import('konva')).default;
-
-      // Find the Konva stage
       const stages = Konva.stages;
       if (!stages || stages.length === 0) {
         toast.error('Canvas não encontrado.');
         setIsExporting(false);
         return;
       }
-
       const stage = stages[0];
       const originalScale = { x: stage.scaleX(), y: stage.scaleY() };
-
-      // Export at 1:1 scale for quality
+      const widthPx = project.widthCm * CM_TO_PX;
+      const heightPx = project.heightCm * CM_TO_PX;
       stage.scale({ x: 1, y: 1 });
-      stage.size({ width: project.width, height: project.height });
-
-      const dataUrl = stage.toDataURL({ pixelRatio: 2 });
-
-      // Restore scale
+      stage.size({ width: widthPx, height: heightPx });
+      const dataUrl = stage.toDataURL({ pixelRatio: 3 });
       stage.scale(originalScale);
-      stage.size({ width: project.width * originalScale.x, height: project.height * originalScale.y });
+      stage.size({ width: widthPx * originalScale.x, height: heightPx * originalScale.y });
 
-      // Create PDF
       const pdf = new jsPDF({
-        orientation: project.width > project.height ? 'landscape' : 'portrait',
-        unit: 'mm',
-        format: [project.width * 0.264583, project.height * 0.264583], // px to mm
+        orientation: project.widthCm > project.heightCm ? 'landscape' : 'portrait',
+        unit: 'cm',
+        format: [project.widthCm, project.heightCm],
       });
-
-      pdf.addImage(dataUrl, 'PNG', 0, 0, project.width * 0.264583, project.height * 0.264583);
+      pdf.addImage(dataUrl, 'PNG', 0, 0, project.widthCm, project.heightCm);
       pdf.save(`${project.name.replace(/\s+/g, '_')}_rotulabel.pdf`);
+      toast.success('PDF exportado com sucesso!');
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Erro na exportação. Tente novamente.');
+    }
+    setIsExporting(false);
+  }, [project]);
 
-      toast.success('PDF exportado! Arquivo salvo com sucesso.');
+  const handleExportPNG = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const Konva = (await import('konva')).default;
+      const stages = Konva.stages;
+      if (!stages || stages.length === 0) {
+        toast.error('Canvas não encontrado.');
+        setIsExporting(false);
+        return;
+      }
+      const stage = stages[0];
+      const originalScale = { x: stage.scaleX(), y: stage.scaleY() };
+      const widthPx = project.widthCm * CM_TO_PX;
+      const heightPx = project.heightCm * CM_TO_PX;
+      stage.scale({ x: 1, y: 1 });
+      stage.size({ width: widthPx, height: heightPx });
+      const dataUrl = stage.toDataURL({ pixelRatio: 3, mimeType: 'image/png' });
+      stage.scale(originalScale);
+      stage.size({ width: widthPx * originalScale.x, height: heightPx * originalScale.y });
+
+      const link = document.createElement('a');
+      link.download = `${project.name.replace(/\s+/g, '_')}_rotulabel.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success('PNG exportado com sucesso!');
     } catch (err) {
       console.error('Export error:', err);
       toast.error('Erro na exportação. Tente novamente.');
@@ -81,17 +103,16 @@ export default function Editor() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        undo();
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault(); undo();
       }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
-        e.preventDefault();
-        redo();
+        e.preventDefault(); redo();
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
+        e.preventDefault(); handleSave();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -99,17 +120,16 @@ export default function Editor() {
   }, [undo, redo, handleSave]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#141414] overflow-hidden">
+    <div className="flex flex-col h-screen bg-white overflow-hidden">
       <TopToolbar
         onExportPDF={handleExportPDF}
+        onExportPNG={handleExportPNG}
         onSave={handleSave}
         isSaving={isSaving || isExporting}
       />
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel />
-        <div ref={stageContainerRef} className="flex-1 overflow-hidden">
-          <CanvasEditor />
-        </div>
+        <CanvasEditor />
         <RightPanel />
       </div>
     </div>

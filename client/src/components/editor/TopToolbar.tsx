@@ -1,159 +1,200 @@
 import { useState } from 'react';
+import { Link } from 'wouter';
 import { useEditorStore } from '../../store/editorStore';
+import AnvisaModal from './AnvisaModal';
 
-interface TopToolbarProps {
+export interface TopToolbarProps {
   onExportPDF: () => void;
+  onExportPNG: () => void;
   onSave: () => void;
-  isSaving?: boolean;
+  isSaving: boolean;
 }
 
-export default function TopToolbar({ onExportPDF, onSave, isSaving }: TopToolbarProps) {
-  const { project, zoom, setZoom, undo, redo, toggleGrid, showGrid, historyIndex, history, setProject } = useEditorStore();
-  const [editingName, setEditingName] = useState(false);
-  const [nameValue, setNameValue] = useState(project.name);
+export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving }: TopToolbarProps) {
+  const { project, setProject, zoom, setZoom, undo, redo, historyIndex, history } = useEditorStore();
+  const [showAnvisa, setShowAnvisa] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const zoomLevels = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
-
-  const handleNameSubmit = () => {
-    setProject({ name: nameValue });
-    setEditingName(false);
-  };
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   return (
-    <div className="h-12 bg-[#1a1a2e] border-b border-[#2d2d3d] flex items-center px-4 gap-3 shrink-0">
-      {/* Logo */}
-      <div className="flex items-center gap-2 mr-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7c3aed] to-[#4c1d95] flex items-center justify-center">
-          <span className="text-white font-bold text-xs">R</span>
-        </div>
-        <span className="text-white font-bold text-sm hidden md:block">Rotulabel</span>
-      </div>
+    <>
+      <div className="h-12 border-b border-gray-200 bg-white flex items-center px-3 gap-2 shrink-0 z-10 shadow-sm">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-1.5 mr-1 no-underline">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center">
+            <span className="text-white text-xs font-bold">R</span>
+          </div>
+          <span className="font-bold text-gray-900 text-sm hidden sm:block">RotuLab</span>
+        </Link>
 
-      <div className="w-px h-6 bg-[#2d2d3d]" />
+        {/* Project name */}
+        <input
+          type="text"
+          value={project.name}
+          onChange={(e) => setProject({ name: e.target.value })}
+          className="text-sm font-medium text-gray-700 border border-transparent rounded px-2 py-1 min-w-0 w-36 hover:border-gray-200 focus:border-violet-400 focus:outline-none bg-transparent hover:bg-gray-50 focus:bg-white transition-colors"
+        />
 
-      {/* Project name */}
-      <div className="flex items-center">
-        {editingName ? (
-          <input
-            autoFocus
-            value={nameValue}
-            onChange={e => setNameValue(e.target.value)}
-            onBlur={handleNameSubmit}
-            onKeyDown={e => e.key === 'Enter' && handleNameSubmit()}
-            className="bg-[#252535] border border-[#7c3aed] rounded px-2 py-0.5 text-sm text-white outline-none w-40"
-          />
-        ) : (
-          <button
-            onClick={() => { setNameValue(project.name); setEditingName(true); }}
-            className="text-sm text-[#e2e8f0] hover:text-white transition-colors truncate max-w-40"
-            title="Clique para renomear"
-          >
-            {project.name}
-          </button>
-        )}
-      </div>
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-      <div className="w-px h-6 bg-[#2d2d3d]" />
-
-      {/* Undo/Redo */}
-      <div className="flex gap-1">
+        {/* Undo/Redo */}
         <button
           onClick={undo}
-          disabled={historyIndex <= 0}
+          disabled={!canUndo}
           title="Desfazer (Ctrl+Z)"
-          className="p-1.5 rounded text-[#64748b] hover:text-white hover:bg-[#252535] disabled:opacity-30 transition-all"
+          className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
           </svg>
         </button>
         <button
           onClick={redo}
-          disabled={historyIndex >= history.length - 1}
-          title="Refazer (Ctrl+Y)"
-          className="p-1.5 rounded text-[#64748b] hover:text-white hover:bg-[#252535] disabled:opacity-30 transition-all"
+          disabled={!canRedo}
+          title="Refazer (Ctrl+Shift+Z)"
+          className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
           </svg>
         </button>
-      </div>
 
-      <div className="w-px h-6 bg-[#2d2d3d]" />
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-      {/* Zoom */}
-      <div className="flex items-center gap-1">
+        {/* Tabela ANVISA */}
         <button
-          onClick={() => setZoom(Math.max(0.25, zoom - 0.25))}
-          className="p-1.5 rounded text-[#64748b] hover:text-white hover:bg-[#252535] transition-all"
+          onClick={() => setShowAnvisa(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
           </svg>
+          Tabela ANVISA
         </button>
-        <select
-          value={zoom}
-          onChange={e => setZoom(Number(e.target.value))}
-          className="bg-[#252535] border border-[#2d2d3d] rounded px-1 py-0.5 text-xs text-white outline-none focus:border-[#7c3aed]"
-        >
-          {zoomLevels.map(z => (
-            <option key={z} value={z}>{Math.round(z * 100)}%</option>
-          ))}
-        </select>
+
+        {/* Cód. barras */}
         <button
-          onClick={() => setZoom(Math.min(2, zoom + 0.25))}
-          className="p-1.5 rounded text-[#64748b] hover:text-white hover:bg-[#252535] transition-all"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          onClick={() => {
+            const { addElement } = useEditorStore.getState();
+            addElement({
+              id: `el_${Date.now()}`,
+              type: 'barcode',
+              x: 20, y: 20,
+              width: 120, height: 60,
+              barcodeValue: '7891234567890',
+              text: '7891234567890',
+            });
+          }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+            <path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14M21 5v14"/>
           </svg>
+          Cód. barras
         </button>
+
+        {/* Zoom */}
+        <div className="flex items-center gap-0.5 ml-auto">
+          <button
+            onClick={() => setZoom(Math.max(0.25, parseFloat((zoom - 0.1).toFixed(2))))}
+            className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/>
+            </svg>
+          </button>
+          <select
+            value={zoom}
+            onChange={e => setZoom(Number(e.target.value))}
+            className="text-xs text-gray-700 bg-white border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-violet-400 w-16"
+          >
+            {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(z => (
+              <option key={z} value={z}>{Math.round(z * 100)}%</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setZoom(Math.min(3, parseFloat((zoom + 0.1).toFixed(2))))}
+            className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+
+        {/* Save */}
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 border border-gray-200 transition-colors disabled:opacity-50"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          {isSaving ? 'Salvando...' : 'Salvar'}
+        </button>
+
+        {/* Export */}
+        <div className="relative">
+          <button
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exportar
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          {showExportMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40 py-1">
+              <button
+                onClick={() => { onExportPDF(); setShowExportMenu(false); }}
+                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Exportar como PDF
+              </button>
+              <button
+                onClick={() => { onExportPNG(); setShowExportMenu(false); }}
+                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Exportar como PNG
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Projects link */}
+        <Link href="/projects" className="no-underline">
+          <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span className="hidden sm:inline">Meus projetos</span>
+          </button>
+        </Link>
       </div>
 
-      <div className="w-px h-6 bg-[#2d2d3d]" />
-
-      {/* Grid toggle */}
-      <button
-        onClick={toggleGrid}
-        title="Mostrar/ocultar grade"
-        className={`p-1.5 rounded transition-all ${showGrid ? 'text-[#7c3aed] bg-[#7c3aed]/20' : 'text-[#64748b] hover:text-white hover:bg-[#252535]'}`}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-        </svg>
-      </button>
-
-      {/* Canvas size info */}
-      <div className="text-xs text-[#64748b] hidden lg:block">
-        {project.width} × {project.height}px
-      </div>
-
-      <div className="flex-1" />
-
-      {/* Action buttons */}
-      <button
-        onClick={onSave}
-        disabled={isSaving}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#252535] hover:bg-[#2d2d3d] border border-[#2d2d3d] rounded text-xs text-[#94a3b8] hover:text-white transition-all disabled:opacity-50"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-        </svg>
-        {isSaving ? 'Salvando...' : 'Salvar'}
-      </button>
-
-      <button
-        onClick={onExportPDF}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] hover:from-[#6d28d9] hover:to-[#5b21b6] rounded text-xs text-white font-medium transition-all shadow-lg shadow-[#7c3aed]/25"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Exportar PDF
-      </button>
-    </div>
+      {showAnvisa && <AnvisaModal onClose={() => setShowAnvisa(false)} />}
+    </>
   );
 }
