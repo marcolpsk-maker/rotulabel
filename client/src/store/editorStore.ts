@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ElementType = 'text' | 'rect' | 'circle' | 'line' | 'image' | 'badge' | 'nutritionTable' | 'barcode' | 'group';
+export type ElementType = 'text' | 'rect' | 'circle' | 'line' | 'image' | 'badge' | 'nutritionTable' | 'barcode' | 'group' | 'wave' | 'star' | 'triangle' | 'arrow' | 'hexagon' | 'polygon';
 
 export type BlendMode =
   | 'source-over' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten'
@@ -121,7 +121,7 @@ export interface EditorState {
   showGuides: boolean;
   history: LabelProject[];
   historyIndex: number;
-  activeLeftTab: 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers' | 'blocks' | 'assets';
+  activeLeftTab: 'templates' | 'elements' | 'uploads' | 'text' | 'shapes' | 'layers' | 'blocks' | 'assets' | 'size' | 'logo';
 
   setProject: (project: Partial<LabelProject>) => void;
   addElement: (element: CanvasElement) => void;

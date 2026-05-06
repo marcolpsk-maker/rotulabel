@@ -183,6 +183,8 @@ function TextElement({ element, onSelect, onChange, onCommit }: RProps) {
     );
   }
 
+  const textGradient = element.gradient ? gradientProps(element) : {};
+
   return (
     <Text
       ref={textRef}
@@ -192,7 +194,7 @@ function TextElement({ element, onSelect, onChange, onCommit }: RProps) {
       fontFamily={element.fontFamily || 'Inter'}
       fontStyle={element.fontStyle || 'normal'}
       align={element.align || 'left'}
-      fill={element.fill || '#0f172a'}
+      fill={element.gradient ? undefined : (element.fill || '#0f172a')}
       width={element.width}
       letterSpacing={element.letterSpacing || 0}
       lineHeight={element.lineHeight || 1.2}
@@ -200,6 +202,7 @@ function TextElement({ element, onSelect, onChange, onCommit }: RProps) {
       strokeWidth={element.textStrokeWidth || 0}
       fillAfterStrokeEnabled
       wrap="word"
+      {...textGradient}
     />
   );
 }
@@ -288,6 +291,44 @@ function ShapeElement({ element, onSelect, onChange, onCommit }: RProps) {
       />
     );
   }
+  if (element.type === 'wave') {
+    const w = element.width || 200;
+    const h = element.height || 50;
+    // smooth wave path
+    const data = `M 0 ${h/2} Q ${w*0.25} 0 ${w*0.5} ${h/2} T ${w} ${h/2} L ${w} ${h} L 0 ${h} Z`;
+    return (
+      <Path ref={ref as any} {...common} data={data}
+        fill={element.gradient ? undefined : (element.fill || '#6366f1')}
+        stroke={element.stroke} strokeWidth={element.strokeWidth || 0} />
+    );
+  }
+  if (element.type === 'triangle') {
+    const w = element.width || 80, h = element.height || 80;
+    const data = `M ${w/2} 0 L ${w} ${h} L 0 ${h} Z`;
+    return <Path ref={ref as any} {...common} data={data} fill={element.fill || '#6366f1'} stroke={element.stroke} strokeWidth={element.strokeWidth || 0} />;
+  }
+  if (element.type === 'star') {
+    const w = element.width || 80;
+    const r2 = w / 2, r1 = w / 4;
+    const pts: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? r2 : r1;
+      const a = (Math.PI / 5) * i - Math.PI / 2;
+      pts.push(`${r2 + Math.cos(a) * r} ${r2 + Math.sin(a) * r}`);
+    }
+    const data = `M ${pts.join(' L ')} Z`;
+    return <Path ref={ref as any} {...common} data={data} fill={element.fill || '#f59e0b'} stroke={element.stroke} strokeWidth={element.strokeWidth || 0} />;
+  }
+  if (element.type === 'hexagon') {
+    const w = element.width || 80, h = element.height || 80;
+    const data = `M ${w*0.25} 0 L ${w*0.75} 0 L ${w} ${h/2} L ${w*0.75} ${h} L ${w*0.25} ${h} L 0 ${h/2} Z`;
+    return <Path ref={ref as any} {...common} data={data} fill={element.fill || '#0ea5e9'} stroke={element.stroke} strokeWidth={element.strokeWidth || 0} />;
+  }
+  if (element.type === 'arrow') {
+    const w = element.width || 120, h = element.height || 40;
+    const data = `M 0 ${h*0.3} L ${w*0.7} ${h*0.3} L ${w*0.7} 0 L ${w} ${h/2} L ${w*0.7} ${h} L ${w*0.7} ${h*0.7} L 0 ${h*0.7} Z`;
+    return <Path ref={ref as any} {...common} data={data} fill={element.fill || '#6366f1'} stroke={element.stroke} strokeWidth={element.strokeWidth || 0} />;
+  }
   return null;
 }
 
@@ -352,7 +393,7 @@ export default function CanvasEditor() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-neutral-200 dark:bg-neutral-900 overflow-auto p-8">
+    <div className="flex-1 flex items-center justify-center bg-slate-100 overflow-auto p-8">
       <div className="relative">
         <div className="absolute -top-7 left-0 right-0 flex items-center justify-center text-xs text-neutral-500 font-medium">
           {project.widthCm} × {project.heightCm} cm
