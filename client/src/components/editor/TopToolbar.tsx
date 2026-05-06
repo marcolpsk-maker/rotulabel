@@ -37,14 +37,14 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           className="text-sm font-medium text-neutral-200 border border-transparent rounded px-2 py-1 min-w-0 w-28 sm:w-36 hover:border-neutral-700 focus:border-violet-400 focus:outline-none bg-transparent hover:bg-neutral-800 focus:bg-neutral-900 transition-colors"
         />
 
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+        <div className="w-px h-5 bg-neutral-700 mx-0.5" />
 
         {/* Undo/Redo */}
         <button
           onClick={undo}
           disabled={!canUndo}
           title="Desfazer (Ctrl+Z)"
-          className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
@@ -54,19 +54,19 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           onClick={redo}
           disabled={!canRedo}
           title="Refazer (Ctrl+Shift+Z)"
-          className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
           </svg>
         </button>
 
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+        <div className="w-px h-5 bg-neutral-700 mx-0.5" />
 
         {/* Tabela ANVISA */}
         <button
           onClick={() => setShowAnvisa(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-neutral-300 hover:bg-neutral-800 transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -78,7 +78,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
 
         {/* Cód. barras */}
         <button
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-neutral-300 hover:bg-neutral-800 transition-colors"
           onClick={() => {
             const { addElement } = useEditorStore.getState();
             addElement({
@@ -101,7 +101,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
         <div className="flex items-center gap-0.5 ml-auto">
           <button
             onClick={() => setZoom(Math.max(0.25, parseFloat((zoom - 0.1).toFixed(2))))}
-            className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
+            className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/>
@@ -110,7 +110,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           <select
             value={zoom}
             onChange={e => setZoom(Number(e.target.value))}
-            className="text-xs text-gray-700 bg-white border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-violet-400 w-16"
+            className="text-xs text-neutral-200 bg-neutral-900 border border-neutral-700 rounded px-1 py-0.5 outline-none focus:border-violet-400 w-16"
           >
             {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(z => (
               <option key={z} value={z}>{Math.round(z * 100)}%</option>
@@ -118,7 +118,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           </select>
           <button
             onClick={() => setZoom(Math.min(3, parseFloat((zoom + 0.1).toFixed(2))))}
-            className="p-1.5 rounded text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
+            className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
@@ -126,13 +126,13 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           </button>
         </div>
 
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+        <div className="w-px h-5 bg-neutral-700 mx-0.5" />
 
         {/* Save */}
         <button
           onClick={onSave}
           disabled={isSaving}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 border border-gray-200 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-neutral-300 hover:bg-neutral-800 border border-neutral-700 transition-colors disabled:opacity-50"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
@@ -157,10 +157,10 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
             </svg>
           </button>
           {showExportMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-40 py-1">
+            <div className="absolute right-0 top-full mt-1 bg-white border border-neutral-700 rounded-lg shadow-lg z-50 min-w-40 py-1">
               <button
                 onClick={() => { onExportPDF(); setShowExportMenu(false); }}
-                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 flex items-center gap-2"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -170,7 +170,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
               </button>
               <button
                 onClick={() => { onExportPNG(); setShowExportMenu(false); }}
-                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-800 flex items-center gap-2"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
@@ -184,7 +184,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
 
         {/* Projects link */}
         <Link href="/projects" className="no-underline">
-          <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+          <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-neutral-400 hover:bg-neutral-800 transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
               <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
