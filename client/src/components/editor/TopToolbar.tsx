@@ -40,7 +40,7 @@ export default function TopToolbar({ onExportPDF, onExportPNG, onSave, isSaving 
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-500 flex items-center justify-center">
             <span className="text-white text-xs font-bold">R</span>
           </div>
-          <span className="font-bold text-slate-900 text-sm hidden md:block">Rotulabel</span>
+          <span className="font-bold text-slate-900 text-sm hidden md:block">Rotulabel Pro</span>
         </Link>
 
         <input
