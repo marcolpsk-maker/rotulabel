@@ -169,7 +169,7 @@ export default function Home() {
 
       {/* Footer */}
       <div className="border-t border-[#2d2d3d] py-8 text-center text-sm text-[#64748b]">
-        <p>Rotulabel — Editor Profissional de Rótulos para Nutracêuticos</p>
+        <p>Rotulabel — Editor Profissional de Rótulos para Nutracêuticos · v2</p>
       </div>
     </div>
   );
